@@ -1,0 +1,24 @@
+﻿.downloads-over-time {
+    display: flex;
+    flex-direction: row;
+    background-color: transparent;
+}
+.over-time-week {
+    display: flex;
+    flex-direction: column;
+    background-color: black;
+}
+
+.over-time-day {
+    display: block;
+    width: 8px;
+    height: 8px;
+    box-sizing: border-box;
+    border: 1px solid #002200;
+    background-color: #00ffff33;
+    margin: 1px;
+}
+.over-time-future {
+    background-color: #000000;
+    border: 1px solid #080808;
+}

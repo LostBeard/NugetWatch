@@ -1,0 +1,72 @@
+﻿@page "/"
+@inject NugetMonitorService NugetMonitorService
+
+<div class="container">
+    @{
+        var owners = NugetMonitorService.Owners;
+    }
+    @foreach (var owner in owners)
+    {
+        var totalDownloads = NugetMonitorService.GetOwnerTotalDownloads(owner);
+        var packages = NugetMonitorService.OwnerPackagesByTotalDownloads(owner);
+        <div>
+            <div>
+                <div>
+                    @($"Owner: {owner}")
+                </div>
+                <div>
+                    @($"Packages: {packages.Count}")
+                </div>
+                <div>
+                    @($"Downloads: {totalDownloads}")
+                </div>
+            </div>
+            <div>
+                @foreach (var package in packages)
+                {
+                    var isActive = package.Active(TimeSpan.FromMinutes(60));
+                    <div>
+                        <div style="display: flex; flex-direction: row;">
+                            <div style="padding-right: 4px;"><img style="width: 24px; height: 24px;" onerror="this.src='default-package-icon-256x256.png'; this.onerror = null;" src="@(package.IconUrl ?? "default-package-icon-256x256.png")" /></div>
+                            <div style="padding: 2px;">
+                                <div style="font-weight: bold;">
+                                    @package.Title @package.Version - <span style="@(isActive ? "color: red;" : "")">@package.TotalDownloads</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <DownloadsOverTime Data="package" />
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        NugetMonitorService.OnPackageChange += NugetMonitorService_OnPackageChange;
+        NugetMonitorService.UpdateBegin += UpdateBegin;
+        NugetMonitorService.UpdateEnd += UpdateEnd;
+    }
+    void UpdateBegin()
+    {
+
+    }
+    void UpdateEnd()
+    {
+
+        //StateHasChanged();
+    }
+    void NugetMonitorService_OnPackageChange(List<NugetPackageChangeEventArg> args)
+    {
+        foreach (var arg in args)
+        {
+            var downloadsChanged = arg.PackageDataOld != null && arg.PackageDataOld.TotalDownloads != arg.PackageDataNew.TotalDownloads;
+
+        }
+        StateHasChanged();
+    }
+}

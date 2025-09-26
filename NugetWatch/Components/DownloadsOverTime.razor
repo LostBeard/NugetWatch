@@ -1,0 +1,146 @@
+﻿@implements IDisposable
+
+<div class="downloads-over-time">
+    @{
+        var width = Entries.Length / 7;
+        var height = 7;
+        var i = 0;
+    }
+    @for (var x = 0; x < width; x++)
+    {
+        <div class="over-time-week">
+            @for (var y = 0; y < height; y++)
+            {
+                var entry = Entries[i];
+                var classes = new List<string> { "over-time-day" };
+                var future = i > boxCountUsed;
+                if (future) classes.Add("over-time-future");
+                var date = entry.Date;
+                var downloads = entry.Downloads;
+                var bgColor = entry.BGColor;
+                var style = "";
+                if (!future && !string.IsNullOrEmpty(bgColor)) style += $"background-color: {bgColor};";
+                i++;
+                <div style="@style" class="@(string.Join(" ", classes))" title="@($"{downloads} - {date.Date.ToShortDateString()}")">
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Inject]
+    NugetMonitorService NugetMonitorService { get; set; } = default!;
+
+    [Parameter]
+    public NugetPackageData Data { get; set; } = default!;
+
+    DateTimeOffset DayOfWeekOrPrevious(DateTimeOffset date, DayOfWeek dayOfWeek = DayOfWeek.Sunday)
+    {
+        var daysFrom = date.DayOfWeek - dayOfWeek;
+        if (daysFrom < 0) daysFrom += 7;
+        return date - TimeSpan.FromDays(daysFrom);
+    }
+
+    string _DataKey = "";
+
+    Entry[] Entries = new Entry[0];
+    int boxCountUsed = 0;
+    int dayOfYear = 0;
+
+    DateTimeOffset startingSunday;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_DataKey != Data.DataKey || dayOfYear != DateTime.Now.DayOfYear)
+        {
+            dayOfYear = DateTime.Now.DayOfYear;
+            _DataKey = Data.DataKey;
+            await Refresh();
+        }
+    }
+    bool _beenInit = false;
+    protected override void OnInitialized()
+    {
+        if (!_beenInit)
+        {
+            _beenInit = true;
+            //NugetMonitorService.OnPackageChange += NugetMonitorService_OnPackageChange;
+        }
+    }
+    void NugetMonitorService_OnPackageChange(List<NugetPackageChangeEventArg> packages)
+    {
+        StateHasChanged();
+    }
+    public void Dispose()
+    {
+        if (_beenInit)
+        {
+            _beenInit = false;
+            //NugetMonitorService.OnPackageChange += NugetMonitorService_OnPackageChange;
+        }
+    }
+    class Entry
+    {
+        public DateTimeOffset Date { get; set; }
+        public long Downloads { get; set; }
+        public string BGColor { get; set; }
+    }
+    List<NugetPackageData> AllData = new List<NugetPackageData>();
+
+    NugetPackageData? GetFromDBByDataTimeStamp(DateTimeOffset asOf)
+    {
+        return AllData.OrderByDescending(o => o.DataTimeStampLong).FirstOrDefault(o => o.DataTimeStamp <= asOf);
+    }
+    async Task Refresh()
+    {
+        var now = DateTimeOffset.Now;
+        var boxCountTotal = 365;
+        var firstDay = now - TimeSpan.FromDays(boxCountTotal);
+        startingSunday = DayOfWeekOrPrevious(firstDay);
+        var currentDay = startingSunday;
+        boxCountUsed = (int)Math.Ceiling((now - startingSunday).TotalDays);
+        boxCountTotal = (boxCountTotal % 7) > 0 ? boxCountTotal + (7 - (boxCountTotal % 7)) : boxCountTotal;
+        AllData = await NugetMonitorService.GetFromDBByTitle(Data.Title);
+        var entries = new Entry[boxCountTotal];
+        for (var i = 0; i < boxCountTotal; i++)
+        {
+            try
+            {
+                var classes = new List<string> { "over-time-day" };
+                if (i > boxCountUsed) classes.Add("over-time-future");
+                var date = startingSunday + TimeSpan.FromDays(i);
+                var startDate = StartOfDay(date.ToLocalTime().Date);
+                var endDate = EndOfDay(date.ToLocalTime().Date);
+                // subtract total downloads at beginning of day the from total downloads at end of the day
+                var dataStartOfDay = GetFromDBByDataTimeStamp(startDate);
+                var downloadsStartOfDay = dataStartOfDay?.TotalDownloads ?? 0;
+                var dataEndOfDay = GetFromDBByDataTimeStamp(endDate);
+                var downloadsEndOfDay = dataEndOfDay?.TotalDownloads ?? 0;
+                var downloads = downloadsEndOfDay - downloadsStartOfDay;
+                var g = downloads < 16 ? downloads * 16 : downloads;
+                if (g > 255) g = 255;
+                entries[i] = new Entry
+                {
+                    Date = date,
+                    Downloads = downloads,
+                    BGColor = $"#{Convert.ToHexString(new byte[] { 0, (byte)g, 0 })}",
+                };
+            }
+            catch (Exception ex)
+            {
+                var nmt = ex.ToString();
+            }
+        }
+        Entries = entries;
+        StateHasChanged();
+    }
+    public static DateTime StartOfDay(DateTime theDate)
+    {
+        return theDate.Date;
+    }
+
+    public static DateTime EndOfDay(DateTime theDate)
+    {
+        return theDate.Date.AddDays(1).AddTicks(-1);
+    }
+}
