@@ -135,7 +135,7 @@
         boxCountTotal = (boxCountTotal % 7) > 0 ? boxCountTotal + (7 - (boxCountTotal % 7)) : boxCountTotal;
         var entries = new Entry[boxCountTotal];
         AllData = await NugetMonitorService.GetFromDBByTitle(Data.Title);
-        VersionsPublished = await NugetService.GetNugetPackageVersionsPublished(Data.Versions, startingSunday);
+        VersionsPublished = await NugetService.GetNugetPackageVersionsPublished(Data, startingSunday);
         for (var i = 0; i < boxCountTotal; i++)
         {
             try
