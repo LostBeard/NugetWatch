@@ -130,13 +130,12 @@
         var now = DateTimeOffset.Now;
         var boxCountTotal = 365;
         var firstDay = now - TimeSpan.FromDays(boxCountTotal);
-        startingSunday = DayOfWeekOrPrevious(firstDay);
-        var currentDay = startingSunday;
+        startingSunday = DayOfWeekOrPrevious(firstDay).Date.Date;
         boxCountUsed = (int)Math.Ceiling((now - startingSunday).TotalDays);
         boxCountTotal = (boxCountTotal % 7) > 0 ? boxCountTotal + (7 - (boxCountTotal % 7)) : boxCountTotal;
         var entries = new Entry[boxCountTotal];
         AllData = await NugetMonitorService.GetFromDBByTitle(Data.Title);
-        VersionsPublished = await NugetService.GetNugetPackageVersionsPublished(Data.Versions);
+        VersionsPublished = await NugetService.GetNugetPackageVersionsPublished(Data.Versions, startingSunday);
         for (var i = 0; i < boxCountTotal; i++)
         {
             try
@@ -144,9 +143,9 @@
                 var classes = new List<string> { "over-time-day" };
                 if (i > boxCountUsed) classes.Add("over-time-future");
                 var date = startingSunday + TimeSpan.FromDays(i);
-                var isToday = now.Date.Date == date.Date.Date;
                 var startDate = StartOfDay(date.ToLocalTime().Date);
                 var endDate = EndOfDay(date.ToLocalTime().Date);
+                var isToday = now.Date.Date == date.Date.Date;
                 // subtract total downloads at beginning of day the from total downloads at end of the day
                 var daysData = GetFromDBByDataTimeStamp(startDate, endDate);
                 var dataStartOfDay = GetFromDBByDataTimeStamp(startDate) ?? (daysData.Count > 1 ? daysData.First() : null);

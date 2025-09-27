@@ -89,16 +89,18 @@ namespace NugetWatch.Services
             }
             return version;
         }
-
-        public async Task<Dictionary<string, DateTimeOffset>> GetNugetPackageVersionsPublished(NugetPackageVersion[] versions)
+        public async Task<Dictionary<string, DateTimeOffset>> GetNugetPackageVersionsPublished(NugetPackageData package, DateTimeOffset minDate)
         {
             var ret = new Dictionary<string, DateTimeOffset>();
+            // reverse the list so most recent is first and quit when the publish date is older than minDate
+            var versions = package.Versions.Reverse().ToList();
             foreach (var v in versions)
             {
                 var published = await GetNugetPackageVersionPublished(v);
                 if (published != null)
                 {
                     ret[v._Id] = published.Value;
+                    if (minDate > published.Value) break;
                 }
             }
             return ret;
