@@ -57,6 +57,11 @@ namespace NugetWatch.Services
             });
             using var navigator = JS.Get<Navigator>("navigator");
             FS = await navigator.Storage.GetDirectory();
+#if DEBUG
+            _tmr.Interval = 60 * 1 * 1000;
+#else
+            _tmr.Interval = 60 * 5 * 1000;
+#endif
             _tmr.Elapsed += _tmr_Elapsed;
             _tmr.Enabled = true;
             // load owner(s) to watch and the latest package data

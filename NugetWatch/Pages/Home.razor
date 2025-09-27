@@ -24,7 +24,7 @@
             <div class="package-data-list">
                 @foreach (var package in packages)
                 {
-                    var isActive = package.Active(TimeSpan.FromMinutes(5));
+                    var isActive = package.Active(TimeSpan.FromMinutes(15));
                     <div class="package-data">
                         <div style="display: flex; flex-direction: row;">
                             <div style="padding-right: 4px;"><img style="width: 24px; height: 24px;" onerror="this.src='default-package-icon-256x256.png'; this.onerror = null;" src="@(package.IconUrl ?? "default-package-icon-256x256.png")" /></div>
