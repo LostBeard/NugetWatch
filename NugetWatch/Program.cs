@@ -21,9 +21,7 @@ builder.Services.AddSingleton<AppTrayService>();
 builder.Services.AddSingleton<MainLayoutService>();
 builder.Services.AddSingleton<ThemeTrayIconService>();
 builder.Services.AddSingleton<AudioService>();
-
 builder.Services.AddSingleton<NugetMonitorService>();
-builder.Services.AddSingleton<KeepAliveService>();
 
 if (JS.IsWindow)
 {
