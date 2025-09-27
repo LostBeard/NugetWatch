@@ -20,6 +20,7 @@
                 var downloads = entry == null ? 0 : entry.Downloads;
                 var bgColor = entry == null ? null : entry.BGColor;
                 var style = "";
+                if (entry?.IsToday == true) classes.Add("over-time-today");
                 if (!future && !string.IsNullOrEmpty(bgColor)) style += $"background-color: {bgColor};";
                 i++;
                 <div style="@style" class="@(string.Join(" ", classes))" title="@($"{downloads} - {date.Date.ToShortDateString()}")">
@@ -85,6 +86,7 @@
         public DateTimeOffset Date { get; set; }
         public long Downloads { get; set; }
         public string BGColor { get; set; }
+        public bool IsToday { get; set; }
     }
     List<NugetPackageData> AllData = new List<NugetPackageData>();
 
@@ -114,6 +116,7 @@
                 var classes = new List<string> { "over-time-day" };
                 if (i > boxCountUsed) classes.Add("over-time-future");
                 var date = startingSunday + TimeSpan.FromDays(i);
+                var isToday = now.Date.Date == date.Date.Date;
                 var startDate = StartOfDay(date.ToLocalTime().Date);
                 var endDate = EndOfDay(date.ToLocalTime().Date);
                 // subtract total downloads at beginning of day the from total downloads at end of the day
@@ -132,6 +135,7 @@
                     Date = date,
                     Downloads = downloads,
                     BGColor = $"#{Convert.ToHexString(new byte[] { (byte)r, (byte)g, (byte)b })}",
+                    IsToday = isToday,
                 };
             }
             catch (Exception ex)
