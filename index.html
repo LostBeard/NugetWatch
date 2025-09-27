@@ -6,10 +6,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>NugetWatch</title>
     <base href="/NugetWatch/" />
+    <link rel="manifest" href="manifest.webmanifest" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="css/app.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <link href="NugetWatch.styles.css" rel="stylesheet" />
+    <script>
+        // the beforeinstallprompt event is called before blazor finishes loading so we capture it here and Blazor will pick it up after loading.
+        (function () {
+            var attached = true;
+            function onBeforeInstallPrompt(e) {
+                window.DeferredBeforeInstallPromptEvent = e;
+                // prevent default. Blazor will handle the event when it loads.
+                e.preventDefault();
+            };
+            window.GetDeferredBeforeInstallPromptEvent = function () {
+                if (attached) {
+                    attached = false;
+                    window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+                    var ret = window.DeferredBeforeInstallPromptEvent;
+                    if (ret) {
+                        delete window.DeferredBeforeInstallPromptEvent;
+                        return ret;
+                    }
+                }
+                return null;
+            };
+            window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+        })();
+    </script>
 </head>
 
 <body>
