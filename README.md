@@ -6,7 +6,7 @@
 
 ### Note
 - All data is stored in the browser. The only servers used are official `nuget.org` public APIs.
-- To actually track data over time, the web app must be kept running so changes can be saved in the browser.
+- To actually track data over time, the web app must be kept running, or run often, so changes can be saved in the browser.
 - Currently only tracks my Nuget packages (will change soon.)
 
 [NugetWatch](https://lostbeard.github.io/NugetWatch/)
