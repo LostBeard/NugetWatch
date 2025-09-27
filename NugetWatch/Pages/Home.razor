@@ -62,11 +62,11 @@
     }
     void NugetMonitorService_OnPackageChange(List<NugetPackageChangeEventArg> args)
     {
-        foreach (var arg in args)
-        {
-            var downloadsChanged = arg.PackageDataOld != null && arg.PackageDataOld.TotalDownloads != arg.PackageDataNew.TotalDownloads;
+        // foreach (var arg in args)
+        // {
+        //     var downloadsChanged = arg.PackageDataOld != null && arg.PackageDataOld.TotalDownloads != arg.PackageDataNew.TotalDownloads;
 
-        }
+        // }
         StateHasChanged();
     }
 }

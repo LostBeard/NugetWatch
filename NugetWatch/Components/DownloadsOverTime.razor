@@ -92,6 +92,10 @@
     {
         return AllData.OrderByDescending(o => o.DataTimeStampLong).FirstOrDefault(o => o.DataTimeStamp <= asOf);
     }
+    List<NugetPackageData> GetFromDBByDataTimeStamp(DateTimeOffset min, DateTimeOffset max)
+    {
+        return AllData.Where(o => o.DataTimeStamp >= min && o.DataTimeStamp <= max).OrderBy(o => o.DataTimeStamp).ToList();
+    }
     async Task Refresh()
     {
         var now = DateTimeOffset.Now;
@@ -113,11 +117,12 @@
                 var startDate = StartOfDay(date.ToLocalTime().Date);
                 var endDate = EndOfDay(date.ToLocalTime().Date);
                 // subtract total downloads at beginning of day the from total downloads at end of the day
-                var dataStartOfDay = GetFromDBByDataTimeStamp(startDate);
-                var downloadsStartOfDay = dataStartOfDay?.TotalDownloads ?? 0;
+                var daysData = GetFromDBByDataTimeStamp(startDate, endDate);
+                var dataStartOfDay = GetFromDBByDataTimeStamp(startDate) ?? (daysData.Count > 1 ? daysData.First() : null);
                 var dataEndOfDay = GetFromDBByDataTimeStamp(endDate);
+                var downloadsStartOfDay = dataStartOfDay?.TotalDownloads ?? 0;
                 var downloadsEndOfDay = dataEndOfDay?.TotalDownloads ?? 0;
-                var downloads = downloadsEndOfDay - downloadsStartOfDay;
+                var downloads = dataStartOfDay == null || dataEndOfDay == null ? 0 : downloadsEndOfDay - downloadsStartOfDay;
                 var g = downloads < 16 ? downloads * 16 : downloads;
                 if (g > 255) g = 255;
                 entries[i] = new Entry
