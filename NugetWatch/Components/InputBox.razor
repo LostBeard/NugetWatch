@@ -1,0 +1,86 @@
+﻿@using Services
+
+<RadzenTemplateForm Data="@data" Submit="@((DataClass args) => { Submit(args); })">
+    <div>@InputBoxOptions.Text</div>
+    <div class="row">
+        <div class="col">
+            <RadzenTextBox @ref="inputTextbox" @bind-Value="@data.Text" Placeholder="@InputBoxOptions.PlaceHolder" Name="Text" Style="width: 100%;" />
+            @if (InputBoxOptions.Required)
+            {
+                if (InputBoxOptions.RequiredError == null)
+                {
+                    <RadzenRequiredValidator Component="Text" Popup=@InputBoxOptions.PopupErrors />
+                }
+                else
+                {
+                    <RadzenRequiredValidator Component="Text" Text="@InputBoxOptions.RequiredError" Popup=@InputBoxOptions.PopupErrors />
+                }
+
+            }
+            @if (InputBoxOptions.Regex != null)
+            {
+                if (InputBoxOptions.RegexError == null)
+                {
+                    Console.WriteLine("InputBoxOptions.RegexError == null");
+                    <RadzenRegexValidator Component="Text" Pattern="@InputBoxOptions.Regex" Popup=@InputBoxOptions.PopupErrors />
+                }
+                else
+                {
+                    Console.WriteLine("InputBoxOptions.RegexError != null");
+                    <RadzenRegexValidator Component="Text" Text="@InputBoxOptions.RegexError" Pattern="@InputBoxOptions.Regex" Popup=@InputBoxOptions.PopupErrors />
+                }
+            }
+            else
+            {
+                Console.WriteLine("InputBoxOptions.Regex == null");
+            }
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <div class="col-md-12 d-flex align-items-end justify-content-center" style="margin-top: 16px;">
+            <RadzenButton ButtonType="ButtonType.Submit" Icon="save" Text="@InputBoxOptions.SubmitText" />
+            <RadzenButton ButtonStyle="ButtonStyle.Light" Icon="cancel" style="display: inline-block; margin-left: 10px;" Text="Cancel" Click="@Cancel" />
+        </div>
+    </div>
+</RadzenTemplateForm>
+
+@code {
+    string ErrMessage { get; set; } = "";
+
+    class DataClass
+    {
+        public string Text { get; set; } = "";
+    }
+
+    RadzenTextBox inputTextbox { get; set; }
+
+    private DataClass data = new DataClass();
+
+    [Inject]
+    DialogService DialogService { get; set; }
+
+    [Parameter]
+    public InputBoxOptions InputBoxOptions { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        data.Text = InputBoxOptions.DefaultValue;
+        if (data.Text == null) data.Text = "";
+    }
+
+    void Submit(DataClass arg)
+    {
+        var tmp = data.Text;
+        if (tmp == null) tmp = "";
+        DialogService.Close(tmp);
+    }
+
+    void Cancel()
+    {
+        DialogService.Close(null);
+    }
+
+
+
+}

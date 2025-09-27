@@ -1,15 +1,19 @@
 ﻿@page "/"
+@page "/{Owner}"
 @inject NugetMonitorService NugetMonitorService
+@implements IDisposable
 
 <div class="home-body">
-    @{
-        var owners = NugetMonitorService.Owners;
-    }
-    @foreach (var owner in owners)
-    {
-        var totalDownloads = NugetMonitorService.GetOwnerTotalDownloads(owner);
-        var packages = NugetMonitorService.OwnerPackagesByTotalDownloads(owner);
-        <div>
+    <div>
+        @if (NoOwnerSpecified)
+        {
+            <div>Select or Add a Nuget owner</div>
+        }
+        else
+        {
+            var owner = Owner;
+            var totalDownloads = NugetMonitorService.GetOwnerTotalDownloads(owner);
+            var packages = NugetMonitorService.OwnerPackagesByTotalDownloads(owner);
             <div>
                 <h2>
                     @owner
@@ -40,33 +44,47 @@
                     </div>
                 }
             </div>
-        </div>
-    }
+        }
+    </div>
 </div>
 
 @code {
+    [Parameter]
+    public string? Owner { get; set; }
+
+    bool NoOwnerSpecified => string.IsNullOrWhiteSpace(Owner);
+
+    [Inject]
+    NavigationManager NavigationManager { get; set; } = default!;
+
     protected override void OnInitialized()
     {
         NugetMonitorService.OnPackageChange += NugetMonitorService_OnPackageChange;
-        NugetMonitorService.UpdateBegin += UpdateBegin;
         NugetMonitorService.UpdateEnd += UpdateEnd;
     }
-    void UpdateBegin()
+    protected override void OnAfterRender(bool firstRender)
     {
-
+        // if the owner does not exist, we redirect back to the root page
+        if (!NoOwnerSpecified)
+        {
+            var ownerFound = NugetMonitorService.Owners.Contains(Owner!);
+            if (!ownerFound)
+            {
+                NavigationManager.NavigateTo("");
+            }
+        }
+    }
+    public void Dispose()
+    {
+        NugetMonitorService.OnPackageChange -= NugetMonitorService_OnPackageChange;
+        NugetMonitorService.UpdateEnd -= UpdateEnd;
     }
     void UpdateEnd()
     {
-
         StateHasChanged();
     }
     void NugetMonitorService_OnPackageChange(List<NugetPackageChangeEventArg> args)
     {
-        // foreach (var arg in args)
-        // {
-        //     var downloadsChanged = arg.PackageDataOld != null && arg.PackageDataOld.TotalDownloads != arg.PackageDataNew.TotalDownloads;
-
-        // }
         StateHasChanged();
     }
 }

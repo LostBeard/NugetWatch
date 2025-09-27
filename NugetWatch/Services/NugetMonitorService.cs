@@ -23,12 +23,13 @@ namespace NugetWatch.Services
         public bool Updating { get; set; }
         public Dictionary<string, Dictionary<string, NugetPackageData>> OwnerWatch { get; } = new Dictionary<string, Dictionary<string, NugetPackageData>>();
         public List<string> Owners => OwnerWatch.Keys.OrderBy(x => x).ToList();
-        public Dictionary<string, NugetPackageData> OwnerPackages(string owner) => OwnerWatch.TryGetValue(owner, out var p) ? p : new Dictionary<string, NugetPackageData>();
+        public Dictionary<string, NugetPackageData> OwnerPackages(string owner) => owner != null  && OwnerWatch.TryGetValue(owner, out var p) ? p : new Dictionary<string, NugetPackageData>();
         public List<NugetPackageData> OwnerPackagesByTitle(string owner) => OwnerPackages(owner).Values.OrderBy(x => x.Title).ToList();
         public List<NugetPackageData> OwnerPackagesByTotalDownloads(string owner) => OwnerPackages(owner).Values.OrderByDescending(x => x.TotalDownloads).ToList();
 
         public long GetOwnerTotalDownloads(string owner)
         {
+            if (string.IsNullOrWhiteSpace(owner)) return 0;
             var packages = OwnerPackagesByTitle(owner);
             var ret = packages.Sum(x => x.TotalDownloads);
             return ret;
@@ -155,8 +156,11 @@ namespace NugetWatch.Services
         }
         public async Task AddOwnerWatch(string owner)
         {
+            if (string.IsNullOrWhiteSpace(owner)) return;
             if (OwnerWatch.ContainsKey(owner)) return;
-            OwnerWatch[owner] = new Dictionary<string, NugetPackageData>();
+            var packages = await GetFromDBByOwner(owner);
+            var packagesD = packages.GroupBy(o => o.Title).ToDictionary(o => o.First().Title, o => o.OrderByDescending(o => o.DataTimeStampLong).First());
+            OwnerWatch[owner] = packagesD;
             var owners = OwnerWatch.Keys.ToList();
             await FS!.WriteJSON("owners.json", owners);
             await Update();
