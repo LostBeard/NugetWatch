@@ -145,18 +145,12 @@ namespace NugetWatch.Layout
             var location = NavigationManager.Uri;
             if (PageType == pageType && Location == location)
             {
-#if DEBUG && false
-                Console.WriteLine($"SendLocationChanged: false");
-#endif
                 return;
             }
             LocationUpdated = DateTime.Now;
             PageType = pageType;
             Location = location;
             HistoryEntryState = historyEntryState;
-#if DEBUG
-            Console.WriteLine($"LocationChanged: {PageTypeName} [{HistoryEntryState ?? ""}] {Location}");
-#endif
         }
     }
 }
