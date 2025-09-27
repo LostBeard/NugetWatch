@@ -60,7 +60,7 @@ namespace NugetWatch.Services
 #if DEBUG
             _tmr.Interval = 60 * 1 * 1000;
 #else
-            _tmr.Interval = 60 * 5 * 1000;
+            _tmr.Interval = 60 * 2 * 1000;
 #endif
             _tmr.Elapsed += _tmr_Elapsed;
             _tmr.Enabled = true;
