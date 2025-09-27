@@ -123,9 +123,10 @@
                 var downloadsStartOfDay = dataStartOfDay?.TotalDownloads ?? 0;
                 var downloadsEndOfDay = dataEndOfDay?.TotalDownloads ?? 0;
                 int downloads = (int)(dataStartOfDay == null || dataEndOfDay == null ? 0 : downloadsEndOfDay - downloadsStartOfDay);
-                int g = Math.Min(downloads, 255);
-                int r = (int)Math.Min(downloads / 255f, 255);
-                int b = (int)Math.Min(downloads / 65535f, 255);
+                var colorBumped = downloads * 32;
+                int g = Math.Min(colorBumped, 255);
+                int r = (int)Math.Min(colorBumped / 255f, 255);
+                int b = (int)Math.Min(colorBumped / 65535f, 255);
                 entries[i] = new Entry
                 {
                     Date = date,
