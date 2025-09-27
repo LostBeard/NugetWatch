@@ -90,6 +90,10 @@ namespace NugetWatch.Services
             {
                 await AddOwnerWatch("LostBeard");
             }
+            else
+            {
+                _ = Update();
+            }
         }
         async Task SaveToDB(NugetPackageData data)
         {
