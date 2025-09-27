@@ -140,3 +140,21 @@ main[b-4y3xqmymmj] {
         padding-right: 1.5rem !important;
     }
 }
+/* /Pages/Home.razor.rz.scp.css */
+.home-body[b-mg8fufijhr] {
+    padding: 1rem;
+}
+
+.package-data-list[b-mg8fufijhr] {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.package-data[b-mg8fufijhr] {
+    padding: 0.5rem;
+    box-sizing: border-box;
+    border: 1px solid grey;
+    border-radius: 0.5rem;
+    margin: 0.5rem;
+}
