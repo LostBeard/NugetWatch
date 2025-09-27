@@ -189,12 +189,9 @@ namespace NugetWatch.Services
                         if (ownerPackages.TryGetValue(package.Title, out NugetPackageData? packageOld))
                         {
                             package.FirstSeen = packageOld.FirstSeen;
-                            changed = packageOld.Changed(package);
+                            changed = packageOld.Changed(package) && package.TotalDownloads >= packageOld.TotalDownloads;
                             if (changed)
                             {
-                                // pass the old data lsit off and add the now old data to it
-                                //package.OldData = packageOld.OldData;
-                                //package.OldData.Add(packageOld);
                                 var totalDownloadsSinceLast = package.TotalDownloads - packageOld.TotalDownloads;
                                 if (totalDownloadsSinceLast > 0)
                                 {
@@ -210,7 +207,6 @@ namespace NugetWatch.Services
                         }
                         else
                         {
-                            //package.OldData = new List<NugetPackageData>();
                             package.FirstSeen = now;
                             JS.Log($"Package found: {owner} {package.Title} {package.TotalDownloads}");
                             changedPackages.Add(new NugetPackageChangeEventArg { PackageDataNew = package });

@@ -21,7 +21,7 @@
                     @($"Downloads: {totalDownloads}")
                 </div>
             </div>
-            <div>
+            <div style="display: flex; flex-direction: row;">
                 @foreach (var package in packages)
                 {
                     var isActive = package.Active(TimeSpan.FromMinutes(60));
