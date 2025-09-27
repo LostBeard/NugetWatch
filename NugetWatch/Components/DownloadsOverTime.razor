@@ -17,14 +17,21 @@
                 var future = i > boxCountUsed;
                 if (future) classes.Add("over-time-future");
                 var date = entry == null ? DateTimeOffset.MinValue : entry.Date;
+                var isFirst = date.Day == 1;
                 var downloads = entry == null ? 0 : entry.Downloads;
                 var bgColor = entry == null ? null : entry.BGColor;
+                var title = $"{downloads} - {date.Date.ToShortDateString()}";
                 var style = "";
                 if (entry?.IsToday == true) classes.Add("over-time-today");
+                if (isFirst) classes.Add("over-time-first");
                 if (!future && !string.IsNullOrEmpty(bgColor)) style += $"background-color: {bgColor};";
+                if (entry?.PublishedVersions.Any() == true)
+                {
+                    classes.Add("over-time-publish");
+                    title += $" {string.Join(", ", entry.PublishedVersions)}";
+                }
                 i++;
-                <div style="@style" class="@(string.Join(" ", classes))" title="@($"{downloads} - {date.Date.ToShortDateString()}")">
-                </div>
+                <div style="@style" class="@(string.Join(" ", classes))" title="@title"></div>
             }
         </div>
     }
@@ -33,6 +40,9 @@
 @code {
     [Inject]
     NugetMonitorService NugetMonitorService { get; set; } = default!;
+
+    [Inject]
+    NugetService NugetService { get; set; } = default!;
 
     [Parameter]
     public NugetPackageData Data { get; set; } = default!;
@@ -87,6 +97,7 @@
         public long Downloads { get; set; }
         public string BGColor { get; set; }
         public bool IsToday { get; set; }
+        public List<string> PublishedVersions { get; set; }
     }
     List<NugetPackageData> AllData = new List<NugetPackageData>();
 
@@ -98,6 +109,22 @@
     {
         return AllData.Where(o => o.DataTimeStamp >= min && o.DataTimeStamp <= max).OrderBy(o => o.DataTimeStamp).ToList();
     }
+    Dictionary<NugetPackageVersion, DateTimeOffset> GetFromVersionByTimeSpan(DateTimeOffset min, DateTimeOffset max)
+    {
+        var ret = new Dictionary<NugetPackageVersion, DateTimeOffset>();
+        foreach(var v in Data.Versions)
+        {
+            if (VersionsPublished.TryGetValue(v._Id, out var published))
+            {
+                if (published >= min && published <= max)
+                {
+                    ret.Add(v, published);
+                }
+            }
+        }
+        return ret;
+    }
+    Dictionary<string, DateTimeOffset> VersionsPublished = new Dictionary<string, DateTimeOffset>();
     async Task Refresh()
     {
         var now = DateTimeOffset.Now;
@@ -109,6 +136,7 @@
         boxCountTotal = (boxCountTotal % 7) > 0 ? boxCountTotal + (7 - (boxCountTotal % 7)) : boxCountTotal;
         var entries = new Entry[boxCountTotal];
         AllData = await NugetMonitorService.GetFromDBByTitle(Data.Title);
+        VersionsPublished = await NugetService.GetNugetPackageVersionsPublished(Data.Versions);
         for (var i = 0; i < boxCountTotal; i++)
         {
             try
@@ -136,6 +164,7 @@
                     Downloads = downloads,
                     BGColor = $"#{Convert.ToHexString(new byte[] { (byte)r, (byte)g, (byte)b })}",
                     IsToday = isToday,
+                    PublishedVersions = GetFromVersionByTimeSpan(startDate, endDate).Select(o => o.Key.Version).ToList(),
                 };
             }
             catch (Exception ex)

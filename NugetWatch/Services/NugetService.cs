@@ -1,22 +1,18 @@
 ﻿using SpawnDev.BlazorJS;
+using SpawnDev.BlazorJS.JSObjects;
 using System.Linq;
 using System.Net.Http.Json;
 using System.Text.Json;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace NugetWatch.Services
 {
     /// <summary>
     /// https://learn.microsoft.com/en-us/nuget/api/search-query-service-resource
     /// </summary>
-    public class NugetService
+    public class NugetService(HttpClient HttpClient, BlazorJSRuntime JS)
     {
-        HttpClient HttpClient;
-        BlazorJSRuntime JS;
-        public NugetService(HttpClient httpClient, BlazorJSRuntime js)
-        {
-            HttpClient = httpClient;
-            JS = js;
-        }
+        Storage LocalStorage = JS.Get<Storage>("localStorage");
         JsonSerializerOptions JsonSerializerOptionsDefault = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         public async Task<NugetQueryResult?> QueryAPI(string queryString, bool preRelease = true, int? skip = null, int? take = null, string? semVerLevel = "2.0.0")
         {
@@ -63,7 +59,66 @@ namespace NugetWatch.Services
                 if (skip >= totalHits) break;
             } while (true);
         }
+        /// <summary>
+        /// Package version publish date.<br/>
+        /// This will be cached
+        /// </summary>
+        /// <param name="package"></param>
+        /// <returns></returns>
+        public async Task<DateTimeOffset?> GetNugetPackageVersionPublished(NugetPackageVersion package)
+        {
+            if (!packageVersionPublishedCache.TryGetValue(package._Id, out var version))
+            {
+                var localValue = LocalStorage?.GetJSON<DateTimeOffset?>(package._Id);
+                if (localValue != null)
+                {
+                    version = localValue.Value;
+                    packageVersionPublishedCache[package._Id] = version;
+                }
+                else
+                {
+                    var data = await GetNugetPackageVersionData(package);
+                    if (data != null)
+                    {
+                        version = data.Published;
+                        packageVersionPublishedCache[package._Id] = version;
+                        // this can be cached forever as it will not change 
+                        LocalStorage?.SetJSON(package._Id, version);
+                    }
+                }
+            }
+            return version;
+        }
 
+        public async Task<Dictionary<string, DateTimeOffset>> GetNugetPackageVersionsPublished(NugetPackageVersion[] versions)
+        {
+            var ret = new Dictionary<string, DateTimeOffset>();
+            foreach (var v in versions)
+            {
+                var published = await GetNugetPackageVersionPublished(v);
+                if (published != null)
+                {
+                    ret[v._Id] = published.Value;
+                }
+            }
+            return ret;
+        }
+
+        Dictionary<string, DateTimeOffset> packageVersionPublishedCache = new Dictionary<string, DateTimeOffset>();
+        public async Task<NugetPackageVersionData?> GetNugetPackageVersionData(NugetPackageVersion version)
+        {
+            // https://api.nuget.org/v3/registration5-semver1/spawndev.blazorjs/index.json
+            try
+            {
+                var data = await HttpClient.GetFromJsonAsync<NugetPackageVersionData>(version._Id, JsonSerializerOptionsDefault);
+                return data;
+            }
+            catch (Exception ex)
+            {
+                var nmt = true;
+            }
+            return null;
+        }
         public async Task<NugetPackageRegistration?> GetNugetPackageRegistration(NugetPackageData package)
         {
             // https://api.nuget.org/v3/registration5-semver1/spawndev.blazorjs/index.json
@@ -103,7 +158,7 @@ namespace NugetWatch.Services
         public async Task<List<NugetPackageData>> GetOwnedPackages(string ownerName, bool preRelease = true)
         {
             var packages = await QueryAll(ownerName, preRelease);
-            return packages.Where(o =>o.Owners.Contains(ownerName, StringComparer.OrdinalIgnoreCase)).ToList();
+            return packages.Where(o => o.Owners.Contains(ownerName, StringComparer.OrdinalIgnoreCase)).ToList();
         }
     }
 }

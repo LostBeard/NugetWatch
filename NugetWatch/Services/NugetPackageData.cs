@@ -2,6 +2,17 @@
 
 namespace NugetWatch.Services
 {
+    public class NugetPackageVersionData
+    {
+        /// <summary>
+        /// When this package version was published
+        /// </summary>
+        public DateTimeOffset Published { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool Listed { get; set; }
+    }
     public class NugetPackageData
     {
 
