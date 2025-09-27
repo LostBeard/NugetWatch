@@ -1,0 +1,17 @@
+﻿.home-body {
+    padding: 1rem;
+}
+
+.package-data-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.package-data {
+    padding: 0.5rem;
+    box-sizing: border-box;
+    border: 1px solid grey;
+    border-radius: 0.5rem;
+    margin: 0.5rem;
+}

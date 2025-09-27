@@ -11,13 +11,14 @@
         <div class="over-time-week">
             @for (var y = 0; y < height; y++)
             {
+                if (Entries.Length <= i) break;
                 var entry = Entries[i];
                 var classes = new List<string> { "over-time-day" };
                 var future = i > boxCountUsed;
                 if (future) classes.Add("over-time-future");
-                var date = entry.Date;
-                var downloads = entry.Downloads;
-                var bgColor = entry.BGColor;
+                var date = entry == null ? DateTimeOffset.MinValue : entry.Date;
+                var downloads = entry == null ? 0 : entry.Downloads;
+                var bgColor = entry == null ? null : entry.BGColor;
                 var style = "";
                 if (!future && !string.IsNullOrEmpty(bgColor)) style += $"background-color: {bgColor};";
                 i++;
@@ -44,7 +45,7 @@
 
     string _DataKey = "";
 
-    Entry[] Entries = new Entry[0];
+    Entry[] Entries = new Entry[371];
     int boxCountUsed = 0;
     int dayOfYear = 0;
 
@@ -100,8 +101,8 @@
         var currentDay = startingSunday;
         boxCountUsed = (int)Math.Ceiling((now - startingSunday).TotalDays);
         boxCountTotal = (boxCountTotal % 7) > 0 ? boxCountTotal + (7 - (boxCountTotal % 7)) : boxCountTotal;
-        AllData = await NugetMonitorService.GetFromDBByTitle(Data.Title);
         var entries = new Entry[boxCountTotal];
+        AllData = await NugetMonitorService.GetFromDBByTitle(Data.Title);
         for (var i = 0; i < boxCountTotal; i++)
         {
             try

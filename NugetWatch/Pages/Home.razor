@@ -1,7 +1,7 @@
 ﻿@page "/"
 @inject NugetMonitorService NugetMonitorService
 
-<div class="container">
+<div class="home-body">
     @{
         var owners = NugetMonitorService.Owners;
     }
@@ -11,9 +11,9 @@
         var packages = NugetMonitorService.OwnerPackagesByTotalDownloads(owner);
         <div>
             <div>
-                <div>
-                    @($"Owner: {owner}")
-                </div>
+                <h2>
+                    @owner
+                </h2>
                 <div>
                     @($"Packages: {packages.Count}")
                 </div>
@@ -21,11 +21,11 @@
                     @($"Downloads: {totalDownloads}")
                 </div>
             </div>
-            <div style="display: flex; flex-direction: row;">
+            <div class="package-data-list">
                 @foreach (var package in packages)
                 {
                     var isActive = package.Active(TimeSpan.FromMinutes(60));
-                    <div>
+                    <div class="package-data">
                         <div style="display: flex; flex-direction: row;">
                             <div style="padding-right: 4px;"><img style="width: 24px; height: 24px;" onerror="this.src='default-package-icon-256x256.png'; this.onerror = null;" src="@(package.IconUrl ?? "default-package-icon-256x256.png")" /></div>
                             <div style="padding: 2px;">
