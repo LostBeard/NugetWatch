@@ -23,8 +23,15 @@
     background-color: #000000;
     border: 1px solid #080808;
 }
+.over-time-first[b-w0uxzuek0q] {
+    border-top: 1px solid #cc2222;
+    border-left: 1px solid #cc2222;
+}
 .over-time-today[b-w0uxzuek0q] {
     border: 1px solid #008800;
+}
+.over-time-publish[b-w0uxzuek0q] {
+    border: 1px solid #2222cc;
 }
 /* /Layout/AppTray/AppTrayArea.razor.rz.scp.css */
 
