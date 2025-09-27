@@ -13,7 +13,7 @@ namespace NugetWatch.Layout
     {
         
         [Inject]
-        CustomPWAInstallerService CustomPWAInstallerService { get; set; } = default!;
+        PWAInstallerTrayIconService CustomPWAInstallerService { get; set; } = default!;
         [Inject]
         BlazorJSRuntime JS { get; set; } = default!;
         [Inject]
@@ -145,7 +145,7 @@ namespace NugetWatch.Layout
             var location = NavigationManager.Uri;
             if (PageType == pageType && Location == location)
             {
-#if DEBUG
+#if DEBUG && false
                 Console.WriteLine($"SendLocationChanged: false");
 #endif
                 return;

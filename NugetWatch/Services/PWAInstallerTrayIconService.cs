@@ -7,7 +7,7 @@ using static NugetWatch.PWAInstallerService;
 
 namespace NugetWatch
 {
-    public class CustomPWAInstallerService
+    public class PWAInstallerTrayIconService
     {
         PWAInstallerService PWAInstallerService;
         DialogService DialogService;
@@ -16,7 +16,7 @@ namespace NugetWatch
         bool IsShown = false;
         bool FirstRenderFired = false;
         NotificationService NotificationService;
-        public CustomPWAInstallerService(PWAInstallerService pwaInstallerService, DialogService dialogService, AppTrayService trayIconService, NotificationService notificationService)
+        public PWAInstallerTrayIconService(PWAInstallerService pwaInstallerService, DialogService dialogService, AppTrayService trayIconService, NotificationService notificationService)
         {
             DialogService = dialogService;
             PWAInstallerService = pwaInstallerService;

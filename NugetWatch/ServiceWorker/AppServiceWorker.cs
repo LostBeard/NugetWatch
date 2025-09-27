@@ -1,6 +1,9 @@
-﻿using NugetWatch.Services;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using NugetWatch.Services;
 using SpawnDev.BlazorJS;
 using SpawnDev.BlazorJS.JSObjects;
+using SpawnDev.BlazorJS.Toolbox;
 using SpawnDev.BlazorJS.WebWorkers;
 using System;
 
@@ -8,12 +11,20 @@ namespace NugetWatch.ServiceWorker
 {
     public class AppServiceWorker : ServiceWorkerEventHandler
     {
-        NugetService NugetService;
+        Window? window = null;
+        AssetManifest? assetsManifest = null;
         NugetMonitorService NugetMonitorService;
-        public AppServiceWorker(BlazorJSRuntime js, NugetService nugetService, NugetMonitorService nugetMonitorService) : base(js)
+        bool isProduction;
+        string cacheNamePrefix = "offline-cache-";
+        string cacheName = "";
+        CacheStorage? caches = null;
+        List<string>? manifestUrlList = null;
+        Uri baseUri;
+        public AppServiceWorker(BlazorJSRuntime js, NavigationManager navigationManager, NugetMonitorService nugetMonitorService, IWebAssemblyHostEnvironment hostEnvironment) : base(js)
         {
-            NugetService = nugetService;
+            baseUri = new Uri(navigationManager.BaseUri);
             NugetMonitorService = nugetMonitorService;
+            isProduction = hostEnvironment.IsProduction();
         }
         // called before any ServiceWorker events are handled
         protected override async Task OnInitializedAsync()
@@ -21,32 +32,138 @@ namespace NugetWatch.ServiceWorker
             // This service may start in any scope. This will be called before the app runs.
             // If JS.IsWindow == true be careful not stall here.
             // you can do initialization based on the scope that is running
-            Log("GlobalThisTypeName", JS.GlobalThisTypeName);
+            //Log("GlobalThisTypeName", JS.GlobalThisTypeName);
+            window = JS.WindowThis;
+            if (ServiceWorkerThis != null)
+            {
+                caches = ServiceWorkerThis.Caches;
+                // get the assets manifest data generated on release build and imported in the service-worker.js
+                assetsManifest = JS.Get<AssetManifest?>("assetsManifest");
+                if (assetsManifest != null)
+                {
+                    cacheName = $"{cacheNamePrefix}{assetsManifest.Version}";
+                    Log("Offline cache name:", cacheName);
+                    manifestUrlList = assetsManifest!.Assets.Select(asset => new Uri(baseUri, asset.Url).ToString()).ToList();
+                }
+            }
+        }
+        public class CachedApp
+        {
+            public AssetManifest AssetManifest { get; set; }
+            public DateTimeOffset Installed { get; set; } = DateTimeOffset.Now;
         }
         protected override async Task ServiceWorker_OnInstallAsync(ExtendableEvent e)
         {
-            Log($"ServiceWorker_OnInstallAsync", JS.GlobalThisTypeName);
+            // cache assets (if needed)
+            if (assetsManifest != null)
+            {
+                try
+                {
+                    var cacheKeys = await caches!.Keys();
+                    var offlineCaches = cacheKeys.Where(key => key.StartsWith(cacheNamePrefix) && key != cacheName).ToList();
+                    // Fetch and cache all matching items from the assets manifest
+                    var assets = assetsManifest.Assets.ToList();
+                    long reusedByteLength = 0;
+                    long reusedAssetsCount = 0;
+                    using var cache = await caches!.Open(cacheName);
+                    // check existing cache for assets with unchanged an hash so they can be re-used to save on re-downloading
+                    var oldCacheName = offlineCaches.FirstOrDefault();
+                    if (!string.IsNullOrEmpty(oldCacheName))
+                    {
+                        // Trying to re-use unchanged assets
+                        using var oldCache = await caches!.Open(oldCacheName);
+                        var cachedAppOld = await oldCache.ReadJSON<CachedApp>("cachedApp.json");
+                        if (cachedAppOld != null)
+                        {
+                            var assetsRequestsAlt = assets.ToList();
+                            foreach (var asset in assetsRequestsAlt)
+                            {
+                                var oldAssetIndo = cachedAppOld.AssetManifest.Assets.FirstOrDefault(o => o.Url == asset.Url);
+                                var assetFnd = oldAssetIndo != null;
+                                var assetUnchanged = assetFnd && oldAssetIndo!.Hash == asset.Hash;
+                                if (assetUnchanged)
+                                {
+                                    using var resp = await oldCache.Match(new Request(asset.Url));
+                                    if (resp != null)
+                                    {
+                                        using var clone = resp.Clone();
+                                        using var blob = await clone.Blob();
+                                        reusedByteLength += blob.Size;
+                                        // use the existing item in the new cache to prevent redownloading the same data we already have
+                                        await cache.Put(asset.Url, resp);
+                                        assets.Remove(asset);
+                                        reusedAssetsCount++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    var assetsRequests = assets.Select(asset => new Request(asset.Url, new RequestOptions { Integrity = asset.Hash, Cache = "no-cache" })).ToList();
+                    long downloadedBytes = 0;
+                    if (assetsRequests.Any())
+                    {
+                        await cache.AddAll(assetsRequests);
+                        foreach(var asset in assetsRequests)
+                        {
+                            using var resp = await cache.Match(new Request(asset.Url));
+                            if (resp != null)
+                            {
+                                using var blob = await resp.Blob();
+                                downloadedBytes += blob.Size;
+                            }
+                        }
+                    }
+                    // write the current cache info so we can use it next update
+                    var cachedApp = new CachedApp { AssetManifest = assetsManifest };
+                    await cache.WriteJSON("cachedApp.json", cachedApp);
+                    Log("Cached:", cacheName, $"Downloaded: {assetsRequests.Count} assets ({downloadedBytes} bytes)", $"Reused: {reusedAssetsCount} assets ({reusedByteLength} bytes)");
+                }
+                catch (Exception ex)
+                {
+                    Log("Failed to cache:", cacheName);
+                }
+            }
             _ = ServiceWorkerThis!.SkipWaiting();   // returned task can be ignored
         }
         protected override async Task ServiceWorker_OnActivateAsync(ExtendableEvent e)
         {
             Log($"ServiceWorker_OnActivateAsync");
+            // delete old caches
+            // Delete unused caches that start with offline prefix
+            var cacheKeys = await caches!.Keys();
+            var expiredCaches = cacheKeys.Where(key => key.StartsWith(cacheNamePrefix) && key != cacheName).ToList();
+            await Task.WhenAll(expiredCaches.Select(key => caches.Delete(key)));
             await ServiceWorkerThis!.Clients.Claim();
         }
         protected override async Task<Response> ServiceWorker_OnFetchAsync(FetchEvent e)
         {
-            Log($"ServiceWorker_OnFetchAsync", e.Request.Method, e.Request.Url);
-            Response ret;
-            try
+            //Log($"ServiceWorker_OnFetchAsync", e.Request.Method, e.Request.Url);
+            Response? response = null;
+            if (e.Request.Method == "GET" && assetsManifest != null)
             {
-                ret = await JS.Fetch(e.Request);
+                // For all navigation requests, try to serve index.html from cache,
+                // unless that request is for an offline resource.
+                // If you need some URLs to be server-rendered, edit the following check to exclude those URLs
+                var shouldServeIndexHtml = e.Request.Mode == "navigate" && !manifestUrlList!.Any(url => url == e.Request.Url);
+                var request = shouldServeIndexHtml ? new Request("index.html") : e.Request;
+                var cache = await caches!.Open(cacheName);
+                response = await cache.Match(request);
+                // cached response used
             }
-            catch (Exception ex)
+            if (response == null)
             {
-                ret = new Response(ex.Message, new ResponseOptions { Status = 500, StatusText = ex.Message, Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } } });
-                Log($"ServiceWorker_OnFetchAsync failed: {ex.Message}");
+                try
+                {
+                    response = await JS.Fetch(e.Request);
+                    // live response used
+                }
+                catch (Exception ex)
+                {
+                    // failed response used
+                    response = new Response(ex.Message, new ResponseOptions { Status = 500, StatusText = ex.Message, Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } } });
+                }
             }
-            return ret;
+            return response;
         }
         protected override async Task ServiceWorker_OnPeriodicSyncAsync(PeriodicSyncEvent e)
         {
@@ -96,12 +213,15 @@ namespace NugetWatch.ServiceWorker
                 });
                 return true;
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 JS.Log("Periodic Sync could not be registered!", ex.ToString());
             }
             return false;
         }
-        void Log(params object[] msg) => JS.Log(msg);
+        void Log(params object[] msg)
+        {
+            JS.Log(msg);
+        }
     }
 }

@@ -14,7 +14,7 @@ builder.Services.AddBlazorJSRuntime(out var JS);
 builder.Services.AddWebWorkerService();
 
 // ServiceWorker registration (runs this app in a ServiceWorker so it can handle PeriodicSyncEvents)
-builder.Services.RegisterServiceWorker<AppServiceWorker>(GlobalScope.All);
+builder.Services.RegisterServiceWorker<AppServiceWorker>(GlobalScope.All, new ServiceWorkerConfig { ImportServiceWorkerAssets = true });
 
 builder.Services.AddSingleton(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddSingleton<NugetService>();
@@ -31,7 +31,9 @@ builder.Services.AddSingleton<AudioService>();
 builder.Services.AddSingleton<NugetMonitorService>();
 
 builder.Services.AddSingleton<PWAInstallerService>();
-builder.Services.AddSingleton<CustomPWAInstallerService>();
+builder.Services.AddSingleton<PWAInstallerTrayIconService>();
+
+builder.Services.AddSingleton<AssetManifestService>();
 
 if (JS.IsWindow)
 {
@@ -39,6 +41,12 @@ if (JS.IsWindow)
     builder.RootComponents.Add<HeadOutlet>("head::after");
 }
 var host = await builder.Build().StartBackgroundServices();
+var AssetManifestService = host.Services.GetRequiredService<AssetManifestService>();
+
+var version = AssetManifestService.AssetManifest?.Version ?? "";
+var scope = JS.GlobalThisTypeName;
+
+JS.Log($">> {scope} - {version}..");
 
 #if DEBUG && false
 var NugetService = host.Services.GetRequiredService<NugetService>();

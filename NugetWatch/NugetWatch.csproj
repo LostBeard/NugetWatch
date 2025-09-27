@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
@@ -10,11 +10,18 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.20" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.20" PrivateAssets="all" />
-		<PackageReference Include="SpawnDev.BlazorJS" Version="2.32.0" />
+		<PackageReference Include="SpawnDev.BlazorJS" Version="2.32.2" />
 		<PackageReference Include="SpawnDev.BlazorJS.WebWorkers" Version="2.19.0" />
 		<PackageReference Include="Radzen.Blazor" Version="7.3.1" />
 	</ItemGroup>
-	
+
+	<PropertyGroup>
+		<ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+	</PropertyGroup>
+	<ItemGroup>
+		<ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+	</ItemGroup>
+
 	<!-- SpawnDev.BlazorJS.WebWorkers config -->
 	<PropertyGroup>
 		<!-- 

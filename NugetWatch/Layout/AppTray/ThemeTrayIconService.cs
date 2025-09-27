@@ -54,7 +54,7 @@ namespace NugetWatch.Layout.AppTray
                 ThemeService.ThemeChanged += ThemeService_ThemeChanged;
                 LoadUserTheme();
             }
-            JS.Log("Current theme", ThemeService.Theme);
+            //JS.Log("Current theme", ThemeService.Theme);
         }
         void SaveUserTheme()
         {
