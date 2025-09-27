@@ -122,14 +122,15 @@
                 var dataEndOfDay = GetFromDBByDataTimeStamp(endDate);
                 var downloadsStartOfDay = dataStartOfDay?.TotalDownloads ?? 0;
                 var downloadsEndOfDay = dataEndOfDay?.TotalDownloads ?? 0;
-                var downloads = dataStartOfDay == null || dataEndOfDay == null ? 0 : downloadsEndOfDay - downloadsStartOfDay;
-                var g = downloads < 16 ? downloads * 16 : downloads;
-                if (g > 255) g = 255;
+                int downloads = (int)(dataStartOfDay == null || dataEndOfDay == null ? 0 : downloadsEndOfDay - downloadsStartOfDay);
+                int g = Math.Min(downloads, 255);
+                int r = (int)Math.Min(downloads / 255f, 255);
+                int b = (int)Math.Min(downloads / 65535f, 255);
                 entries[i] = new Entry
                 {
                     Date = date,
                     Downloads = downloads,
-                    BGColor = $"#{Convert.ToHexString(new byte[] { 0, (byte)g, 0 })}",
+                    BGColor = $"#{Convert.ToHexString(new byte[] { (byte)r, (byte)g, (byte)b })}",
                 };
             }
             catch (Exception ex)
