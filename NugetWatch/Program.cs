@@ -4,11 +4,18 @@ using NugetWatch;
 using NugetWatch.Layout;
 using NugetWatch.Layout.AppTray;
 using NugetWatch.Services;
+using NugetWatch.ServiceWorker;
 using Radzen;
 using SpawnDev.BlazorJS;
+using SpawnDev.BlazorJS.WebWorkers;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.Services.AddBlazorJSRuntime(out var JS);
+builder.Services.AddWebWorkerService();
+
+// ServiceWorker registration (runs this app in a ServiceWorker so it can handle PeriodicSyncEvents)
+builder.Services.RegisterServiceWorker<AppServiceWorker>(GlobalScope.All);
+
 builder.Services.AddSingleton(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 builder.Services.AddSingleton<NugetService>();
 builder.Services.AddSingleton<GitHubService>();
@@ -22,6 +29,9 @@ builder.Services.AddSingleton<MainLayoutService>();
 builder.Services.AddSingleton<ThemeTrayIconService>();
 builder.Services.AddSingleton<AudioService>();
 builder.Services.AddSingleton<NugetMonitorService>();
+
+builder.Services.AddSingleton<PWAInstallerService>();
+builder.Services.AddSingleton<CustomPWAInstallerService>();
 
 if (JS.IsWindow)
 {

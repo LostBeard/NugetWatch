@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components.Web;
 using NugetWatch.Layout.AppTray;
 using NugetWatch.Services;
+using NugetWatch.ServiceWorker;
 using Radzen;
 using SpawnDev.BlazorJS;
 using System.Xml.Linq;
@@ -10,6 +11,9 @@ namespace NugetWatch.Layout
 {
     public partial class MainLayout
     {
+        
+        [Inject]
+        CustomPWAInstallerService CustomPWAInstallerService { get; set; } = default!;
         [Inject]
         BlazorJSRuntime JS { get; set; } = default!;
         [Inject]
@@ -31,6 +35,10 @@ namespace NugetWatch.Layout
         [Inject]
         NugetService NugetService { get; set; } = default!;
 
+
+        [Inject]
+        AppServiceWorker AppServiceWorker { get; set; } = default!;
+
         string Title => MainLayoutService.Title;
         bool leftSidebarExpanded = false;
         bool rightSidebarExpanded = false;
@@ -44,6 +52,21 @@ namespace NugetWatch.Layout
         {
             NavigationManager.LocationChanged += NavigationManager_LocationChanged;
             MainLayoutService.OnTitleChanged += MainLayoutService_OnTitleChanged;
+        }
+        async Task EnableBackgroundSync(bool enable)
+        {
+            if (enable)
+            {
+                var succ = await AppServiceWorker.RegisterBackgroundPeriodicSync();
+                if (succ)
+                {
+                    NotificationService.Notify(NotificationSeverity.Info, "Background sync enabled");
+                }
+            }
+            else
+            {
+                await AppServiceWorker.UnregisterBackgroundPeriodicSync();
+            }
         }
         private void MainLayoutService_OnTitleChanged()
         {
@@ -60,6 +83,10 @@ namespace NugetWatch.Layout
             {
                 AfterLocationChanged();
             }
+        }
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender) await CustomPWAInstallerService.AfterFirstRenderAsync();
         }
         void OwnerContextMenu(MouseEventArgs args, string owner)
         {

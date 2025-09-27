@@ -5,11 +5,6 @@ using Timer = System.Timers.Timer;
 
 namespace NugetWatch.Services
 {
-    public class NugetPackageChangeEventArg
-    {
-        public NugetPackageData? PackageDataOld { get; set; }
-        public NugetPackageData PackageDataNew { get; set; }
-    }
     public class NugetMonitorService(BlazorJSRuntime JS, NugetService NugetService) : IAsyncBackgroundService
     {
         public delegate void PackageChangeDelegate(List<NugetPackageChangeEventArg> packages);
@@ -86,14 +81,18 @@ namespace NugetWatch.Services
                     var nmt = true;
                 }
             }
-            // add defaults if none
-            if (!OwnerWatch.Any())
+            // don't auto-update if not running in a window
+            if (JS.IsWindow)
             {
-                await AddOwnerWatch("LostBeard");
-            }
-            else
-            {
-                _ = Update();
+                // add defaults if none
+                if (!OwnerWatch.Any())
+                {
+                    await AddOwnerWatch("LostBeard");
+                }
+                else
+                {
+                    _ = Update();
+                }
             }
         }
         async Task SaveToDB(NugetPackageData data)

@@ -15,6 +15,10 @@
                 <RadzenSidebarToggle Style="margin: 0 0.5rem 0 0;" Click="@(() => leftSidebarExpanded = !leftSidebarExpanded)" />
                 <RadzenMenu>
                     <RadzenMenuItem title="Add Nuget package owner" Text="Add Watch" Icon="add" Click="@(() => AddWatch())" />
+                    <RadzenMenuItem Text="Options" Icon="settings">
+                        <RadzenMenuItem Text="Enable Background Sync" Icon="add" Click="@(() => EnableBackgroundSync(true))" />
+                        <RadzenMenuItem Text="Disable Background Sync" Icon="remove" Click="@(() => EnableBackgroundSync(false))" />
+                    </RadzenMenuItem>
                 </RadzenMenu>
             </RadzenStack>
             <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0" JustifyContent="JustifyContent.Right">

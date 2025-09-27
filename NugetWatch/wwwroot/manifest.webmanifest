@@ -1,0 +1,21 @@
+﻿{
+  "short_name": "NugetWatch",
+  "name": "Nuget Watch",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ],
+  "id": "/",
+  "start_url": "",
+  "display": "standalone",
+  "theme_color": "black",
+  "background_color": "white"
+}
