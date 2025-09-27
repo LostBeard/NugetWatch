@@ -1,6 +1,4 @@
-﻿@using Services
-
-<RadzenTemplateForm Data="@data" Submit="@((DataClass args) => { Submit(args); })">
+﻿<RadzenTemplateForm Data="@data" Submit="@((DataClass args) => { Submit(args); })">
     <div>@InputBoxOptions.Text</div>
     <div class="row">
         <div class="col">
@@ -21,18 +19,12 @@
             {
                 if (InputBoxOptions.RegexError == null)
                 {
-                    Console.WriteLine("InputBoxOptions.RegexError == null");
                     <RadzenRegexValidator Component="Text" Pattern="@InputBoxOptions.Regex" Popup=@InputBoxOptions.PopupErrors />
                 }
                 else
                 {
-                    Console.WriteLine("InputBoxOptions.RegexError != null");
                     <RadzenRegexValidator Component="Text" Text="@InputBoxOptions.RegexError" Pattern="@InputBoxOptions.Regex" Popup=@InputBoxOptions.PopupErrors />
                 }
-            }
-            else
-            {
-                Console.WriteLine("InputBoxOptions.Regex == null");
             }
         </div>
     </div>
