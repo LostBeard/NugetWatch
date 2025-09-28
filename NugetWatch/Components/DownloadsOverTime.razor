@@ -131,7 +131,7 @@
         var today = DateTimeOffset.Now.Date;
         var boxCountTotal = 365;
         boxCountTotal = (boxCountTotal % 7) > 0 ? boxCountTotal + (7 - (boxCountTotal % 7)) : boxCountTotal;
-        var firstDay = today - TimeSpan.FromDays(boxCountTotal);
+        var firstDay = today - TimeSpan.FromDays(boxCountTotal - 2);
         startingSunday = DayOfWeekOrNext(firstDay).Date;
         boxCountUsed = (int)Math.Ceiling((today - startingSunday).TotalDays);
         var entries = new Entry[boxCountTotal];
