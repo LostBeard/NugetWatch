@@ -30,7 +30,7 @@
 		- Patching can be done at runtime in Javascript, or at build time. 
 		- Build time patching gives better performance and works with stricter ContentSecurityPolicy rules
 		- false - patch at runtime (current default)
-		- true  - patch during build (required for ServiceWorker module mode, and Chrome browser extension background ServiceWorker)
+		- true  - patch during build (required for ServiceWorker module mode (not required in classic mode), and Chrome browser extension background ServiceWorker)
 		! NOTE - The asset manifest file (service-worker-assets.js) will be updated during publish build if using the ServiceWorkerAssetsManifest flag and WebWorkerPatchFramework == true
 		-->
 		<WebWorkerPatchFramework>false</WebWorkerPatchFramework>

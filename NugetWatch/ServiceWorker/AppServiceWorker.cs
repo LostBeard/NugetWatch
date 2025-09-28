@@ -101,22 +101,11 @@ namespace NugetWatch.ServiceWorker
                     }
                     var assetsRequests = assets.Select(asset => new Request(asset.Url, new RequestOptions { Integrity = asset.Hash, Cache = "no-cache" })).ToList();
                     long downloadedBytes = 0;
-                    int failedCount = 0;
                     if (assetsRequests.Any())
                     {
-                        Log("~ Cached:", cacheName, $"Downloaded: {assetsRequests.Count} assets ({downloadedBytes} bytes)", $"Reused: {reusedAssetsCount} assets ({reusedByteLength} bytes)");
-                        foreach (var asset in assetsRequests)
+                        await cache.AddAll(assetsRequests);
+                        foreach(var asset in assetsRequests)
                         {
-                            try
-                            {
-                                await cache.Add(asset);
-                            }
-                            catch (Exception ex)
-                            {
-                                failedCount++;
-                                Log("Failed to cache asset:", cacheName, asset.Url, ex.ToString());
-                                continue;
-                            }
                             using var resp = await cache.Match(asset);
                             if (resp != null)
                             {
@@ -128,7 +117,7 @@ namespace NugetWatch.ServiceWorker
                     // write the current cache info so we can use it next update
                     var cachedApp = new CachedApp { AssetManifest = assetsManifest };
                     await cache.WriteJSON("cachedApp.json", cachedApp);
-                    Log($"Failed: {failedCount} Cached:", cacheName, $"Downloaded: {assetsRequests.Count} assets ({downloadedBytes} bytes)", $"Reused: {reusedAssetsCount} assets ({reusedByteLength} bytes)");
+                    Log("Cached:", cacheName, $"Downloaded: {assetsRequests.Count} assets ({downloadedBytes} bytes)", $"Reused: {reusedAssetsCount} assets ({reusedByteLength} bytes)");
                 }
                 catch (Exception ex)
                 {
@@ -164,7 +153,7 @@ namespace NugetWatch.ServiceWorker
                 if (response != null)
                 {
                     // cached response used
-                    Log("Cache used", request.Url);
+                    //Log("Cache used", request.Url);
                 }
             }
             if (response == null)
@@ -172,12 +161,12 @@ namespace NugetWatch.ServiceWorker
                 try
                 {
                     response = await JS.Fetch(request);
-                    Log("Live used", request.Url);
+                    //Log("Live used", request.Url);
                     // live response used
                 }
                 catch (Exception ex)
                 {
-                    Log("Failed used", request.Url);
+                    //Log("Failed used", request.Url);
                     // failed response used
                     response = new Response(ex.Message, new ResponseOptions { Status = 500, StatusText = ex.Message, Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } } });
                 }
