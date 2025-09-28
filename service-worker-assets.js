@@ -1,5 +1,5 @@
 self.assetsManifest = {
-  "version": "63y/kWjn",
+  "version": "7FD7CUHU",
   "assets": [
     {
       "hash": "sha256-rjyNzrHMmPSKn39/2OKXiHcvlIDlw+8FttQESpop+5w=",
@@ -222,7 +222,7 @@ self.assetsManifest = {
       "url": "_framework/Microsoft.JSInterop.wasm"
     },
     {
-      "hash": "sha256-rzwXIfyqFRLQqcsBCKzholAMnpAe/vcnNtcnAiYq15U=",
+      "hash": "sha256-u2chzssPxtXekOlMiC+a9lrz/TM7x48/o1908eb6B/w=",
       "url": "_framework/NugetWatch.wasm"
     },
     {
@@ -326,7 +326,7 @@ self.assetsManifest = {
       "url": "_framework/System.ObjectModel.wasm"
     },
     {
-      "hash": "sha256-ON6wGp1eLSJ1iM/rKT4GgNBh29uAd3T69Cshx5XkJXo=",
+      "hash": "sha256-xlYwpXitgxhO4tWNFxYoWc5L1s484HzaJKvMvaAWMtU=",
       "url": "_framework/System.Private.CoreLib.wasm"
     },
     {
@@ -414,7 +414,7 @@ self.assetsManifest = {
       "url": "_framework/System.wasm"
     },
     {
-      "hash": "sha256-CKefLQhFsimIGsjrOyd7utD5vlkZmnKrIJf7R7Hg7yA=",
+      "hash": "sha256-Dh5tVyC+4BxBtBeoT+BUz69egiVciUbNTM2SEabHmpk=",
       "url": "_framework/blazor.boot.json"
     },
     {
@@ -430,7 +430,7 @@ self.assetsManifest = {
       "url": "_framework/dotnet.native.js"
     },
     {
-      "hash": "sha256-kg1G2YcljhFrcLEqEJCnqr38Gabc5T6fKIt58koSOW8=",
+      "hash": "sha256-/IZIUy7i0HJoRTwa7+XD/Vm85vd+PzNHw+XKnsEqmXg=",
       "url": "_framework/dotnet.native.wasm"
     },
     {

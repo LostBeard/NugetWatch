@@ -1,2 +1,2 @@
-/* Manifest version: 63y/kWjn */
+/* Manifest version: 7FD7CUHU */
 // place holder so .Net DK doesn't throw an error but we can still get a valid app manifest
