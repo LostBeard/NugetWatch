@@ -1,7 +1,7 @@
 {
   "mainAssemblyName": "NugetWatch",
   "resources": {
-    "hash": "sha256-itteGAOXqHGDBUlyBzWc1r+/An0TELK2potTAQ82kiw=",
+    "hash": "sha256-3GWEk+XWO2wG/FOT+wz3IUxa7mppkMvzD+gfrQQirwY=",
     "jsModuleNative": {
       "dotnet.native.js": "sha256-9TVR0uC+H3fakMcEoV70Ms3+OwoiheJSvWMbIWnZ16I="
     },
@@ -81,7 +81,7 @@
       "System.Xml.XDocument.wasm": "sha256-ShyDQ2bIdytaacfKpkhCPBZ9Ede8X1u2QzruuU1N2fM=",
       "System.wasm": "sha256-9DLmgOsnmEbjuZrRVFruRmVRvh/skjCDv6hQMjVZ3K8=",
       "System.Private.CoreLib.wasm": "sha256-ON6wGp1eLSJ1iM/rKT4GgNBh29uAd3T69Cshx5XkJXo=",
-      "NugetWatch.wasm": "sha256-Q+wlYhSU8+gABq90WUlAy9YKHt5i5PQHA6XNDObFKMw="
+      "NugetWatch.wasm": "sha256-br6+NBkA4X4I2jlQvId9HK+DwnlfkGhl5W5sBiYwr7s="
     },
     "libraryInitializers": {
       "SpawnDev.BlazorJS.lib.module.js": "sha256-MSEFzzIHfyaslxH4GvsWrzxOUHz5n4SKxG0AiWpiYV0="
