@@ -1,4 +1,5 @@
 self.assetsManifest = {
+  "version": "5M3tUJE2",
   "assets": [
     {
       "hash": "sha256-rjyNzrHMmPSKn39/2OKXiHcvlIDlw+8FttQESpop+5w=",
@@ -221,7 +222,7 @@ self.assetsManifest = {
       "url": "_framework/Microsoft.JSInterop.wasm"
     },
     {
-      "hash": "sha256-HD7/ZFJCaI48JeVzJmAb7TeLdDictBzO2P7wq5z09zU=",
+      "hash": "sha256-GAAb0z473ON96KPUna6aiWAsQ3Mj/VD+uFZmaxCpt8c=",
       "url": "_framework/NugetWatch.wasm"
     },
     {
@@ -233,7 +234,7 @@ self.assetsManifest = {
       "url": "_framework/SpawnDev.BlazorJS.WebWorkers.wasm"
     },
     {
-      "hash": "sha256-ltvRDuHNcpjW0SBwIIseiuUIbRqi/96qjV1If8DJAGg=",
+      "hash": "sha256-KEUVMyqRcqBPNTONNIJqaEnOZ1dI5diWVTLmHwKmXFk=",
       "url": "_framework/SpawnDev.BlazorJS.wasm"
     },
     {
@@ -413,19 +414,19 @@ self.assetsManifest = {
       "url": "_framework/System.wasm"
     },
     {
-      "hash": "sha256-EO5bVsno4v/IpOwC37a+rhoessfwN5YyvLXHYqDrPuw=",
+      "hash": "sha256-h9HeTxXLn0M26Mx3ERkgexIwa5idkAxkSw0l+1ByFLA=",
       "url": "_framework/blazor.boot.json"
     },
     {
-      "hash": "sha256-nLaFIfAucpDg37kTm8fQDbAcLWaXEK6MlF3Qwhhd+b4=",
+      "hash": "sha256-gvHfnndfEu1tRf0rFb5988rWq7ITIotOaE8+AMbKYbc=",
       "url": "_framework/blazor.webassembly.js"
     },
     {
-      "hash": "sha256-ST3qptaATg8naaN5xL5J1QzRZGfk/e0PSMtYBjlAM6Y=",
+      "hash": "sha256-7SfZvEvB4CK7KrKGp7RmD2YyWXaxcUwmVfVD9Jrwboo=",
       "url": "_framework/dotnet.js"
     },
     {
-      "hash": "sha256-gO6cXiUIHICmf1X78NqYD2z4bH9/HrqrZFWcbNWu4ZA=",
+      "hash": "sha256-9TVR0uC+H3fakMcEoV70Ms3+OwoiheJSvWMbIWnZ16I=",
       "url": "_framework/dotnet.native.js"
     },
     {
@@ -433,7 +434,7 @@ self.assetsManifest = {
       "url": "_framework/dotnet.native.wasm"
     },
     {
-      "hash": "sha256-cG5PSVxoeI2zhNOE9O+D8eNXY2hiwcWw6Fyu8m4Qz2E=",
+      "hash": "sha256-OH8zlJkheyf8H9oAbu0wu1oQm9FKy/BKjDk4Bj/va3s=",
       "url": "_framework/dotnet.runtime.js"
     },
     {
@@ -520,6 +521,5 @@ self.assetsManifest = {
       "hash": "sha256-QjohqwJdzqvSpk2zpdZb5DYeFNqPiRDylWiWpxvisNU=",
       "url": "spawndev.blazorjs.webworkers.module.js"
     }
-  ],
-  "version": "qiGHE2Ss"
+  ]
 };
