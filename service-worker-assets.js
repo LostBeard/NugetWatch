@@ -1,5 +1,5 @@
 self.assetsManifest = {
-  "version": "XZffLliz",
+  "version": "RnoEjMoA",
   "assets": [
     {
       "hash": "sha256-rjyNzrHMmPSKn39/2OKXiHcvlIDlw+8FttQESpop+5w=",
@@ -222,7 +222,7 @@ self.assetsManifest = {
       "url": "_framework/Microsoft.JSInterop.wasm"
     },
     {
-      "hash": "sha256-me8XqxufsD6jVzkc16moJNcYGHAZjTIIgbkr4LDuYrg=",
+      "hash": "sha256-oAcesGZtyl33GWwL0a5m9s/omtACeaqBbWPWQuNpNsI=",
       "url": "_framework/NugetWatch.wasm"
     },
     {
@@ -414,7 +414,7 @@ self.assetsManifest = {
       "url": "_framework/System.wasm"
     },
     {
-      "hash": "sha256-XMzH8GHOlMkJhcw1XEZVqDo9e7Dsg8X8Cmu+5Y8/TUY=",
+      "hash": "sha256-AyiymujEUtUsLLuOgBpw9E3ujoQHru+MtPZgM8Znrnw=",
       "url": "_framework/blazor.boot.json"
     },
     {
@@ -490,7 +490,7 @@ self.assetsManifest = {
       "url": "index.html"
     },
     {
-      "hash": "sha256-u2pl4ZuJl9hvxGMC1nKXQqUznqLON4T08kmp5QQiZo0=",
+      "hash": "sha256-p3dp53p8tE/7mFzhnAsCwAOWF8XjL3bgiZtq6NsWuu0=",
       "url": "manifest.webmanifest"
     },
     {
