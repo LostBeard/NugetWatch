@@ -21,15 +21,15 @@ jobs:
 
     # Install dotnet wasm buildtools workload
     - name: Install .NET WASM Build Tools
-      run: dotnet workload install wasm-tools-net8        
+      run: dotnet workload install wasm-tools-net8     
+
+    # changes the base-tag in index.html from '/' to '/NugetWatch/' to match GitHub Pages repository subdirectory
+    - name: Change base-tag in index.html from / to /NugetWatch/
+      run: sed -i 's/<base href="\/"/<base href="\/NugetWatch\/"/g' ./NugetWatch/wwwroot/index.html   
 
     # publishes Blazor project to the publish-folder
     - name: Publish .NET Core Project
       run: dotnet publish ./NugetWatch/ --nologo -c:Release --output publish
-
-    # changes the base-tag in index.html from '/' to '/NugetWatch/' to match GitHub Pages repository subdirectory
-    - name: Change base-tag in index.html from / to /NugetWatch/
-      run: sed -i 's/<base href="\/"/<base href="\/NugetWatch\/"/g' publish/wwwroot/index.html
     
     # copy index.html to 404.html to serve the same file when a file is not found
     - name: copy index.html to 404.html
