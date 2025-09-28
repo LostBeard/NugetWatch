@@ -83,14 +83,15 @@ namespace NugetWatch.ServiceWorker
                                 var assetUnchanged = assetFnd && oldAssetIndo!.Hash == asset.Hash;
                                 if (assetUnchanged)
                                 {
-                                    using var resp = await oldCache.Match(new Request(asset.Url));
+                                    using var request = new Request(asset.Url, new RequestOptions { Integrity = asset.Hash, Cache = "no-cache" });
+                                    using var resp = await oldCache.Match(request);
                                     if (resp != null)
                                     {
                                         using var clone = resp.Clone();
                                         using var blob = await clone.Blob();
                                         reusedByteLength += blob.Size;
                                         // use the existing item in the new cache to prevent redownloading the same data we already have
-                                        await cache.Put(asset.Url, resp);
+                                        await cache.Put(request, resp);
                                         assets.Remove(asset);
                                         reusedAssetsCount++;
                                     }
@@ -100,12 +101,23 @@ namespace NugetWatch.ServiceWorker
                     }
                     var assetsRequests = assets.Select(asset => new Request(asset.Url, new RequestOptions { Integrity = asset.Hash, Cache = "no-cache" })).ToList();
                     long downloadedBytes = 0;
+                    int failedCount = 0;
                     if (assetsRequests.Any())
                     {
-                        await cache.AddAll(assetsRequests);
-                        foreach(var asset in assetsRequests)
+                        Log("~ Cached:", cacheName, $"Downloaded: {assetsRequests.Count} assets ({downloadedBytes} bytes)", $"Reused: {reusedAssetsCount} assets ({reusedByteLength} bytes)");
+                        foreach (var asset in assetsRequests)
                         {
-                            using var resp = await cache.Match(new Request(asset.Url));
+                            try
+                            {
+                                await cache.Add(asset);
+                            }
+                            catch (Exception ex)
+                            {
+                                failedCount++;
+                                Log("Failed to cache asset:", cacheName, asset.Url, ex.ToString());
+                                continue;
+                            }
+                            using var resp = await cache.Match(asset);
                             if (resp != null)
                             {
                                 using var blob = await resp.Blob();
@@ -116,11 +128,11 @@ namespace NugetWatch.ServiceWorker
                     // write the current cache info so we can use it next update
                     var cachedApp = new CachedApp { AssetManifest = assetsManifest };
                     await cache.WriteJSON("cachedApp.json", cachedApp);
-                    Log("Cached:", cacheName, $"Downloaded: {assetsRequests.Count} assets ({downloadedBytes} bytes)", $"Reused: {reusedAssetsCount} assets ({reusedByteLength} bytes)");
+                    Log($"Failed: {failedCount} Cached:", cacheName, $"Downloaded: {assetsRequests.Count} assets ({downloadedBytes} bytes)", $"Reused: {reusedAssetsCount} assets ({reusedByteLength} bytes)");
                 }
                 catch (Exception ex)
                 {
-                    Log("Failed to cache:", cacheName);
+                    Log("Failed to cache:", cacheName, ex.ToString());
                 }
             }
             _ = ServiceWorkerThis!.SkipWaiting();   // returned task can be ignored
@@ -139,26 +151,33 @@ namespace NugetWatch.ServiceWorker
         {
             //Log($"ServiceWorker_OnFetchAsync", e.Request.Method, e.Request.Url);
             Response? response = null;
-            if (e.Request.Method == "GET" && assetsManifest != null)
+            using var request = e.Request;
+            if (request.Method == "GET" && assetsManifest != null)
             {
                 // For all navigation requests, try to serve index.html from cache,
                 // unless that request is for an offline resource.
                 // If you need some URLs to be server-rendered, edit the following check to exclude those URLs
-                var shouldServeIndexHtml = e.Request.Mode == "navigate" && !manifestUrlList!.Any(url => url == e.Request.Url);
-                var request = shouldServeIndexHtml ? new Request("index.html") : e.Request;
+                var shouldServeIndexHtml = request.Mode == "navigate" && !manifestUrlList!.Any(url => url == request.Url);
+                var request1 = shouldServeIndexHtml ? new Request("index.html") : request;
                 var cache = await caches!.Open(cacheName);
-                response = await cache.Match(request);
-                // cached response used
+                response = await cache.Match(request1);
+                if (response != null)
+                {
+                    // cached response used
+                    Log("Cache used", request.Url);
+                }
             }
             if (response == null)
             {
                 try
                 {
-                    response = await JS.Fetch(e.Request);
+                    response = await JS.Fetch(request);
+                    Log("Live used", request.Url);
                     // live response used
                 }
                 catch (Exception ex)
                 {
+                    Log("Failed used", request.Url);
                     // failed response used
                     response = new Response(ex.Message, new ResponseOptions { Status = 500, StatusText = ex.Message, Headers = new Dictionary<string, string> { { "Content-Type", "text/plain" } } });
                 }
