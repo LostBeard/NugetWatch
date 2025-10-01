@@ -38,6 +38,7 @@
 </div>
 
 @code {
+
     [Inject]
     NugetMonitorService NugetMonitorService { get; set; } = default!;
 
@@ -45,7 +46,7 @@
     NugetService NugetService { get; set; } = default!;
 
     [Parameter]
-    public NugetPackageData Data { get; set; } = default!;
+    public NugetPackageData PackageData { get; set; } = default!;
 
     DateTime DayOfWeekOrNext(DateTime date, DayOfWeek dayOfWeek = DayOfWeek.Sunday)
     {
@@ -64,10 +65,10 @@
     DateTime startingSunday;
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_DataKey != Data.DataKey || dayOfYear != DateTime.Now.DayOfYear)
+        if (_DataKey != PackageData.DataKey || dayOfYear != DateTime.Now.DayOfYear)
         {
             dayOfYear = DateTime.Now.DayOfYear;
-            _DataKey = Data.DataKey;
+            _DataKey = PackageData.DataKey;
             await Refresh();
         }
     }
@@ -113,10 +114,15 @@
     Dictionary<NugetPackageVersion, DateTimeOffset> GetFromVersionByTimeSpan(DateTimeOffset min, DateTimeOffset max)
     {
         var ret = new Dictionary<NugetPackageVersion, DateTimeOffset>();
-        foreach (var v in Data.Versions)
+        foreach (var v in PackageData.Versions)
         {
             if (VersionsPublished.TryGetValue(v._Id, out var published))
             {
+                if (v._Id.Contains("peerjs/1.5.0.json") && Math.Abs((DateTimeOffset.Now - min).TotalHours) <= 24)
+                {
+                    var wtaf = v._Id;
+                    var nmt = true;
+                }
                 if (published >= min && published <= max)
                 {
                     ret.Add(v, published);
@@ -128,15 +134,15 @@
     Dictionary<string, DateTimeOffset> VersionsPublished = new Dictionary<string, DateTimeOffset>();
     async Task Refresh()
     {
-        var today = DateTimeOffset.Now.Date;
+        var today = DateTime.Now.StartOfDay();
         var boxCountTotal = 365;
         boxCountTotal = (boxCountTotal % 7) > 0 ? boxCountTotal + (7 - (boxCountTotal % 7)) : boxCountTotal;
         var firstDay = today - TimeSpan.FromDays(boxCountTotal - 2);
-        startingSunday = DayOfWeekOrNext(firstDay).Date;
+        startingSunday = DayOfWeekOrNext(firstDay);
         boxCountUsed = (int)Math.Ceiling((today - startingSunday).TotalDays);
         var entries = new Entry[boxCountTotal];
-        AllData = await NugetMonitorService.GetFromDBByTitle(Data.Title);
-        VersionsPublished = await NugetService.GetNugetPackageVersionsPublished(Data, startingSunday);
+        AllData = await NugetMonitorService.GetFromDBByTitle(PackageData.Title);
+        VersionsPublished = await NugetService.GetNugetPackageVersionsPublished(PackageData, startingSunday);
         for (var i = 0; i < boxCountTotal; i++)
         {
             try
@@ -144,9 +150,9 @@
                 var classes = new List<string> { "over-time-day" };
                 if (i > boxCountUsed) classes.Add("over-time-future");
                 var date = startingSunday + TimeSpan.FromDays(i);
-                var startDate = StartOfDay(date.ToLocalTime().Date);
-                var endDate = EndOfDay(date.ToLocalTime().Date);
-                var isToday = today == date.Date;
+                var startDate = date.StartOfDay();
+                var endDate = date.EndOfDay();
+                var isToday = today.Date == startDate.Date;
                 // subtract total downloads at beginning of day the from total downloads at end of the day
                 var daysData = GetFromDBByDataTimeStamp(startDate, endDate);
                 var dataStartOfDay = GetFromDBByDataTimeStamp(startDate) ?? (daysData.Count > 1 ? daysData.First() : null);
@@ -158,13 +164,18 @@
                 int g = Math.Min(colorBumped, 255);
                 int r = (int)Math.Min(colorBumped / 255f, 255);
                 int b = (int)Math.Min(colorBumped / 65535f, 255);
+                var versions = GetFromVersionByTimeSpan(startDate, endDate).Select(o => o.Key.Version).ToList();
+                if (isToday && PackageData.Title.Contains("PeerJS"))
+                {
+                    var nmt = true;
+                }
                 entries[i] = new Entry
                 {
-                    Date = date,
+                    Date = startDate,
                     Downloads = downloads,
                     BGColor = $"#{Convert.ToHexString(new byte[] { (byte)r, (byte)g, (byte)b })}",
                     IsToday = isToday,
-                    PublishedVersions = GetFromVersionByTimeSpan(startDate, endDate).Select(o => o.Key.Version).ToList(),
+                    PublishedVersions = versions,
                 };
             }
             catch (Exception ex)
@@ -174,14 +185,5 @@
         }
         Entries = entries;
         StateHasChanged();
-    }
-    public static DateTime StartOfDay(DateTime theDate)
-    {
-        return theDate.Date;
-    }
-
-    public static DateTime EndOfDay(DateTime theDate)
-    {
-        return theDate.Date.AddDays(1).AddTicks(-1);
     }
 }

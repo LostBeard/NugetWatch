@@ -67,27 +67,27 @@ namespace NugetWatch.Services
         /// <returns></returns>
         public async Task<DateTimeOffset?> GetNugetPackageVersionPublished(NugetPackageVersion package)
         {
-            if (!packageVersionPublishedCache.TryGetValue(package._Id, out var version))
+            if (!packageVersionPublishedCache.TryGetValue(package._Id, out var releaseDate))
             {
                 var localValue = LocalStorage?.GetJSON<DateTimeOffset?>(package._Id);
                 if (localValue != null)
                 {
-                    version = localValue.Value;
-                    packageVersionPublishedCache[package._Id] = version;
+                    releaseDate = localValue.Value;
+                    packageVersionPublishedCache[package._Id] = releaseDate;
                 }
                 else
                 {
-                    var data = await GetNugetPackageVersionData(package);
-                    if (data != null)
+                    var releaseDateTmp = await GetNugetPackageVersionData(package);
+                    if (releaseDateTmp != null)
                     {
-                        version = data.Published;
-                        packageVersionPublishedCache[package._Id] = version;
+                        releaseDate = releaseDateTmp.Published;
+                        packageVersionPublishedCache[package._Id] = releaseDate;
                         // this can be cached forever as it will not change 
-                        LocalStorage?.SetJSON(package._Id, version);
+                        LocalStorage?.SetJSON(package._Id, releaseDate);
                     }
                 }
             }
-            return version;
+            return releaseDate;
         }
         public async Task<Dictionary<string, DateTimeOffset>> GetNugetPackageVersionsPublished(NugetPackageData package, DateTimeOffset minDate)
         {
