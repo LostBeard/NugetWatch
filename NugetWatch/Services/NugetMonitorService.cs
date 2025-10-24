@@ -18,7 +18,7 @@ namespace NugetWatch.Services
         public bool Updating { get; set; }
         public Dictionary<string, Dictionary<string, NugetPackageData>> OwnerWatch { get; } = new Dictionary<string, Dictionary<string, NugetPackageData>>();
         public List<string> Owners => OwnerWatch.Keys.OrderBy(x => x).ToList();
-        public Dictionary<string, NugetPackageData> OwnerPackages(string owner) => owner != null  && OwnerWatch.TryGetValue(owner, out var p) ? p : new Dictionary<string, NugetPackageData>();
+        public Dictionary<string, NugetPackageData> OwnerPackages(string owner) => owner != null && OwnerWatch.TryGetValue(owner, out var p) ? p : new Dictionary<string, NugetPackageData>();
         public List<NugetPackageData> OwnerPackagesByTitle(string owner) => OwnerPackages(owner).Values.OrderBy(x => x.Title).ToList();
         public List<NugetPackageData> OwnerPackagesByTotalDownloads(string owner) => OwnerPackages(owner).Values.OrderByDescending(x => x.TotalDownloads).ToList();
 
@@ -31,12 +31,9 @@ namespace NugetWatch.Services
         }
         FileSystemDirectoryHandle? FS;
 
-        string keyStoreDBName = "storageDB";
-        string keyStoreName = "NugetPackageDataStorage";
-        IDBDatabase? idb;
-        async Task InitAsync()
+        async Task<IDBDatabase> GetDB()
         {
-            idb = await IDBDatabase.OpenAsync(keyStoreDBName, 1, (evt) =>
+            var idb = await IDBDatabase.OpenAsync(keyStoreDBName, 1, (evt) =>
             {
                 // upgrade needed
                 using var request = evt.Target;
@@ -51,6 +48,14 @@ namespace NugetWatch.Services
                     myKeysStore.CreateIndex<long>("dataTimeStampLongIndex", "dataTimeStampLong");
                 }
             });
+            return idb;
+        }
+
+        string keyStoreDBName = "storageDB";
+        string keyStoreName = "NugetPackageDataStorage";
+        async Task InitAsync()
+        {
+            using var idb = await GetDB();
             using var navigator = JS.Get<Navigator>("navigator");
             FS = await navigator.Storage.GetDirectory();
 #if DEBUG
@@ -97,8 +102,9 @@ namespace NugetWatch.Services
         }
         async Task SaveToDB(NugetPackageData data)
         {
+            using var idb = await GetDB();
             // start the IndexedDB transaction in read and write mode
-            using var tx = idb!.Transaction(keyStoreName, true);
+            using var tx = idb.Transaction(keyStoreName, true);
             // get the store
             using var objectStore = tx.ObjectStore<string, NugetPackageData>(keyStoreName);
             // put the data into the store
@@ -109,8 +115,9 @@ namespace NugetWatch.Services
         public Task<List<NugetPackageData>> GetFromDBByAuthor(string author) => GetFromDBByIndex(author, "authorIndex");
         async Task<List<NugetPackageData>> GetFromDBByIndex(string query, string indexName)
         {
+            using var idb = await GetDB();
             // start the IndexedDB transaction in read only mode
-            using var tx = idb!.Transaction(keyStoreName);
+            using var tx = idb.Transaction(keyStoreName);
             // get the key store
             using var objectStore = tx.ObjectStore<string, NugetPackageData>(keyStoreName);
             // get the previously created index 
@@ -130,8 +137,9 @@ namespace NugetWatch.Services
         public async Task<List<NugetPackageData>> GetFromDBByDataTimeStamp(DateTimeOffset min, DateTimeOffset max, bool lowerOpen = false, bool upperOpen = false)
         {
             using var idbKeyRange = IDBKeyRange<long>.Bound(min.ToUnixTimeMilliseconds(), max.ToUnixTimeMilliseconds(), lowerOpen, upperOpen);
+            using var idb = await GetDB();
             // start the IndexedDB transaction in read only mode
-            using var tx = idb!.Transaction(keyStoreName);
+            using var tx = idb.Transaction(keyStoreName);
             // get the key store
             using var objectStore = tx.ObjectStore<string, NugetPackageData>(keyStoreName);
             // get the previously created index 
@@ -142,9 +150,10 @@ namespace NugetWatch.Services
         }
         public async Task<NugetPackageData?> GetFromDBByDataTimeStamp(DateTimeOffset asOf, bool open = false)
         {
+            using var idb = await GetDB();
             using var idbKeyRange = IDBKeyRange<long>.UpperBound(asOf.ToUnixTimeMilliseconds(), open);
             // start the IndexedDB transaction in read only mode
-            using var tx = idb!.Transaction(keyStoreName);
+            using var tx = idb.Transaction(keyStoreName);
             // get the key store
             using var objectStore = tx.ObjectStore<string, NugetPackageData>(keyStoreName);
             // get the previously created index 
