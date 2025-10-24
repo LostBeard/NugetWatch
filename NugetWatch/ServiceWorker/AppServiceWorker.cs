@@ -5,7 +5,7 @@ using SpawnDev.BlazorJS;
 using SpawnDev.BlazorJS.JSObjects;
 using SpawnDev.BlazorJS.Toolbox;
 using SpawnDev.BlazorJS.WebWorkers;
-using System;
+using System.Text.Json;
 
 namespace NugetWatch.ServiceWorker
 {
@@ -116,6 +116,7 @@ namespace NugetWatch.ServiceWorker
                     }
                     // write the current cache info so we can use it next update
                     var cachedApp = new CachedApp { AssetManifest = assetsManifest };
+                    await cache.WriteJSON("service-worker-assets.js", $"var assetsManifest = {JsonSerializer.Serialize(assetsManifest, toJavascriptOptions)};");
                     await cache.WriteJSON("cachedApp.json", cachedApp);
                     Log("Cached:", cacheName, $"Downloaded: {assetsRequests.Count} assets ({downloadedBytes} bytes)", $"Reused: {reusedAssetsCount} assets ({reusedByteLength} bytes)");
                 }
@@ -126,6 +127,7 @@ namespace NugetWatch.ServiceWorker
             }
             _ = ServiceWorkerThis!.SkipWaiting();   // returned task can be ignored
         }
+        JsonSerializerOptions toJavascriptOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
         protected override async Task ServiceWorker_OnActivateAsync(ExtendableEvent e)
         {
             Log($"ServiceWorker_OnActivateAsync");
