@@ -34,7 +34,9 @@
                             <div style="padding-right: 4px;"><img style="width: 24px; height: 24px;" onerror="this.src='default-package-icon-256x256.png'; this.onerror = null;" src="@(package.IconUrl ?? "default-package-icon-256x256.png")" /></div>
                             <div style="padding: 2px;">
                                 <div style="font-weight: bold;">
-                                    @package.Title @package.Version - <span style="@(isActive ? "color: red;" : "")">@package.TotalDownloads</span>
+                                    @package.Title @package.Version - <span style="@(isActive ? "color: red;" : "")">
+                                        @package.TotalDownloads @(NugetMonitorService.GetDownloadsToday(package))
+                                        </span>
                                 </div>
                             </div>
                         </div>

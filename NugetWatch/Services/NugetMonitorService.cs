@@ -148,10 +148,24 @@ namespace NugetWatch.Services
             var results = (await index.GetAllAsync(idbKeyRange)).Using(o => o.ToList());
             return results;
         }
-        public async Task<NugetPackageData?> GetFromDBByDataTimeStamp(DateTimeOffset asOf, bool open = false)
+        //public async Task<List<NugetPackageData>> GetFromDBByDataTimeStamp(DateTimeOffset min, DateTimeOffset max, bool lowerOpen = false, bool upperOpen = false)
+        //{
+        //    using var idbKeyRange = IDBKeyRange<long>.Bound(min.ToUnixTimeMilliseconds(), max.ToUnixTimeMilliseconds(), lowerOpen, upperOpen);
+        //    using var idb = await GetDB();
+        //    // start the IndexedDB transaction in read only mode
+        //    using var tx = idb.Transaction(keyStoreName);
+        //    // get the key store
+        //    using var objectStore = tx.ObjectStore<string, NugetPackageData>(keyStoreName);
+        //    // get the previously created index 
+        //    using var index = objectStore.Index<long>("dataTimeStampLongIndex");
+        //    // query
+        //    var results = (await index.GetAllAsync(idbKeyRange)).Using(o => o.ToList());
+        //    return results;
+        //}
+        public async Task<NugetPackageData?> GetFromDBByDataTimeStamp(DateTimeOffset asOf, bool excludeEndpoint = false)
         {
             using var idb = await GetDB();
-            using var idbKeyRange = IDBKeyRange<long>.UpperBound(asOf.ToUnixTimeMilliseconds(), open);
+            using var idbKeyRange = IDBKeyRange<long>.UpperBound(asOf.ToUnixTimeMilliseconds(), excludeEndpoint);
             // start the IndexedDB transaction in read only mode
             using var tx = idb.Transaction(keyStoreName);
             // get the key store
@@ -190,6 +204,50 @@ namespace NugetWatch.Services
         {
             _Updating ??= _Update();
             return _Updating;
+        }
+        public Dictionary<string, Dictionary<string, long>> DownloadsToday { get; private set; } = new Dictionary<string, Dictionary<string, long>>();
+
+        public long GetDownloadsToday(NugetPackageData nugetPackage)
+        {
+            if (nugetPackage == null || nugetPackage.Owner == null || nugetPackage.Title == null) return 0;
+            return GetDownloadsToday(nugetPackage.Owner, nugetPackage.Title);
+        }
+        public long GetDownloadsToday(string owner, string packageTitle)
+        {
+            if (DownloadsToday.TryGetValue(owner,  out var packageDownloadCounts))
+            {
+                if (packageDownloadCounts.TryGetValue(packageTitle, out var packageDownloadCount))
+                {
+                    return packageDownloadCount;
+                }
+            }
+            return 0;
+        }
+
+        async Task UpdateDownloadsToday()
+        {
+            var now = DateTimeOffset.Now;
+            var startOfDay = now.StartOfDay();
+            var endOfDay = now.EndOfDay();
+            var downloadsToday = new Dictionary<string, Dictionary<string, long>>();
+            foreach (var ownerWatch in OwnerWatch)
+            {
+                var owner = ownerWatch.Key;
+                var ownerPackages = ownerWatch.Value;
+                downloadsToday[owner] = new Dictionary<string, long>();
+                var ownerDownloadsToday = downloadsToday[owner];
+                // owner's packages
+                // iterate
+                foreach (var package in ownerPackages.Values)
+                {
+                    // get the count at the start of the day, and compare to the count now
+                    var startOfDayEntry = await GetFromDBByDataTimeStamp(startOfDay);
+                    var startOfDayCount = startOfDayEntry?.TotalDownloads ?? 0;
+                    var currentCount = package.TotalDownloads;
+                    ownerDownloadsToday[package.Title] = currentCount - startOfDayCount;
+                }
+            }
+            DownloadsToday = downloadsToday;
         }
         async Task _Update()
         {
@@ -247,6 +305,7 @@ namespace NugetWatch.Services
                     {
                         await SaveToDB(p.PackageDataNew);
                     }
+                    await UpdateDownloadsToday();
                     OnPackageChange?.Invoke(changedPackages);
                 }
             }

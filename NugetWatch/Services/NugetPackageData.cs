@@ -45,7 +45,10 @@ namespace NugetWatch.Services
         public long FirstSeenLong => FirstSeen.ToUnixTimeMilliseconds();
 
         public bool Active(TimeSpan timeSpan) => DataTimeStamp > FirstSeen && DateTimeOffset.Now - DataTimeStamp < timeSpan;
-
+        /// <summary>
+        /// Used as the key in the indexedDB.<br/>
+        /// Package name and data timestamp
+        /// </summary>
         public string DataKey => $"{Title} - {DataTimeStamp}";
 
         [JsonPropertyName("@id")]
