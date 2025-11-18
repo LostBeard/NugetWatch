@@ -162,18 +162,25 @@ namespace NugetWatch.Services
         //    var results = (await index.GetAllAsync(idbKeyRange)).Using(o => o.ToList());
         //    return results;
         //}
-        public async Task<NugetPackageData?> GetFromDBByDataTimeStamp(DateTimeOffset asOf, bool excludeEndpoint = false)
+        //public async Task<NugetPackageData?> GetFromDBByDataTimeStamp(DateTimeOffset asOf, bool excludeEndpoint = false)
+        //{
+        //    using var idb = await GetDB();
+        //    using var idbKeyRange = IDBKeyRange<long>.UpperBound(asOf.ToUnixTimeMilliseconds(), excludeEndpoint);
+        //    // start the IndexedDB transaction in read only mode
+        //    using var tx = idb.Transaction(keyStoreName);
+        //    // get the key store
+        //    using var objectStore = tx.ObjectStore<string, NugetPackageData>(keyStoreName);
+        //    // get the previously created index 
+        //    using var index = objectStore.Index<long>("dataTimeStampLongIndex");
+        //    // query
+        //    var result = (await index.GetAllAsync(idbKeyRange)).Using(o => o.ToList().OrderByDescending(o => o.DataTimeStampLong).FirstOrDefault());
+        //    return result;
+        //}
+        public async Task<NugetPackageData?> GetFromDBByDataTimeStamp(string owner, string title, DateTimeOffset asOf)
         {
-            using var idb = await GetDB();
-            using var idbKeyRange = IDBKeyRange<long>.UpperBound(asOf.ToUnixTimeMilliseconds(), excludeEndpoint);
-            // start the IndexedDB transaction in read only mode
-            using var tx = idb.Transaction(keyStoreName);
-            // get the key store
-            using var objectStore = tx.ObjectStore<string, NugetPackageData>(keyStoreName);
-            // get the previously created index 
-            using var index = objectStore.Index<long>("dataTimeStampLongIndex");
-            // query
-            var result = (await index.GetAllAsync(idbKeyRange)).Using(o => o.ToList().OrderByDescending(o => o.DataTimeStampLong).FirstOrDefault());
+
+            var packageEntries = await GetFromDBByTitle(title);
+            var result = packageEntries.Where(o => o.Owner == owner && o.DataTimeStamp <= asOf).OrderByDescending(o => o.DataTimeStampLong).FirstOrDefault();
             return result;
         }
         public async Task AddOwnerWatch(string owner)
@@ -241,7 +248,7 @@ namespace NugetWatch.Services
                 foreach (var package in ownerPackages.Values)
                 {
                     // get the count at the start of the day, and compare to the count now
-                    var startOfDayEntry = await GetFromDBByDataTimeStamp(startOfDay);
+                    var startOfDayEntry = await GetFromDBByDataTimeStamp(package.Owner!, package.Title, startOfDay);
                     var startOfDayCount = startOfDayEntry?.TotalDownloads ?? 0;
                     var currentCount = package.TotalDownloads;
                     ownerDownloadsToday[package.Title] = currentCount - startOfDayCount;
